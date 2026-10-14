@@ -101,6 +101,9 @@ section{display:flex;flex-direction:column;gap:12px}
 .tile .big{font-family:var(--mono);font-size:1.6rem;font-weight:600;line-height:1.1}
 .upd{position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--sig-bg);color:var(--sig);border:2px solid var(--sig);border-radius:8px;padding:12px 14px;font-weight:700;display:flex;align-items:center;gap:10px;max-width:728px;margin:0 auto;box-shadow:0 4px 14px rgba(0,0,0,.25)}
 .upd button{margin-left:auto;min-height:40px;padding:0 12px;border:2px solid var(--sig);background:var(--surface);color:var(--sig);border-radius:6px;font-weight:700;cursor:pointer}
+.sheet{position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.sheet-in{width:100%;max-width:560px;background:var(--surface);border:2px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px}
+textarea{width:100%;min-height:8em;padding:10px 12px;font:inherit;font-weight:500;border:2px solid var(--ink2);border-radius:6px;background:var(--bg);color:var(--ink);resize:vertical}
 .plan-det{border:2px solid var(--oxy)}
 .plan-det>summary{color:var(--oxy)}
 .aid-det{border:2px solid var(--warn-line);background:var(--warn-bg)}
@@ -221,6 +224,16 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surfa
 
 <button class="totop" id="topBtn" aria-label="Back to top" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
+<div class="sheet" id="shSheet" hidden>
+  <div class="sheet-in">
+   <h2 id="shTitle"></h2>
+   <textarea id="shMsg" rows="7"></textarea>
+   <div class="seg">
+    <a class="btn" id="shSend" href="#" target="_blank" rel="noopener" style="text-decoration:none"></a>
+    <button class="btn2" id="shCancel"></button>
+   </div>
+  </div>
+</div>
 <div class="upd" id="upd" hidden role="status"><span id="updTxt"></span><button id="updClose" aria-label="Close">✕</button></div>
 
 <nav class="tabs" aria-label="Sections">
@@ -230,7 +243,8 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surfa
 <div class="picker" id="picker" hidden>
   <div class="picker-in">
     <svg width="64" height="64" viewBox="0 0 34 34" aria-hidden="true" style="margin:0 auto"><rect x="1" y="1" width="32" height="32" rx="7" fill="var(--clay)"/><path d="M17 6v22M17 17l-6 7M17 21l6 6" stroke="var(--clay-soft)" stroke-width="2.4" stroke-linecap="round" fill="none"/><circle cx="25" cy="10" r="3.2" fill="var(--oxy-soft)"/><circle cx="9" cy="12" r="2.2" fill="var(--oxy-soft)"/></svg>
-    <h2>选择语言 · Choose language · Pilih bahasa</h2>
+    <h1 style="font-size:2rem">RootOxy 根区补氧</h1>
+    <p style="font-weight:600;color:var(--ink2)">双氧水给积水黏土里的根补氧 · Oxygen for roots in wet clay · Oksigen untuk akar dalam tanah liat basah</p>
     <button class="langbtn" data-pick="zh">中文</button>
     <button class="langbtn" data-pick="en">English</button>
     <button class="langbtn" data-pick="ms">Malay</button>
@@ -239,7 +253,9 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surfa
 
 <script>
 (function(){
-const APP_VER = "v1.5.0 · 2026-10-14";
+const APP_VER = "v1.6.1 · 2026-10-14";
+const APP_URL = "https://stanleywoosweeleong.github.io/rootoxy/";
+const QR_N = 37, QR_PATH = "M2 2h7v1h-7zM10 2h2v1h-2zM13 2h2v1h-2zM16 2h5v1h-5zM23 2h1v1h-1zM25 2h1v1h-1zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM13 3h2v1h-2zM18 3h2v1h-2zM21 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM11 4h1v1h-1zM14 4h2v1h-2zM22 4h2v1h-2zM25 4h2v1h-2zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h5v1h-5zM16 5h2v1h-2zM19 5h2v1h-2zM22 5h1v1h-1zM24 5h1v1h-1zM26 5h1v1h-1zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM10 6h2v1h-2zM13 6h1v1h-1zM16 6h1v1h-1zM20 6h3v1h-3zM25 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM12 7h2v1h-2zM15 7h2v1h-2zM18 7h1v1h-1zM21 7h1v1h-1zM24 7h1v1h-1zM26 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h4v1h-4zM16 9h5v1h-5zM23 9h1v1h-1zM25 9h1v1h-1zM2 10h1v1h-1zM6 10h1v1h-1zM8 10h3v1h-3zM12 10h2v1h-2zM19 10h1v1h-1zM21 10h11v1h-11zM34 10h1v1h-1zM2 11h1v1h-1zM4 11h3v1h-3zM9 11h1v1h-1zM14 11h2v1h-2zM17 11h2v1h-2zM20 11h1v1h-1zM23 11h3v1h-3zM27 11h1v1h-1zM31 11h3v1h-3zM2 12h1v1h-1zM4 12h2v1h-2zM7 12h2v1h-2zM10 12h2v1h-2zM13 12h2v1h-2zM17 12h3v1h-3zM22 12h1v1h-1zM25 12h1v1h-1zM31 12h1v1h-1zM33 12h1v1h-1zM2 13h3v1h-3zM9 13h2v1h-2zM12 13h2v1h-2zM16 13h1v1h-1zM19 13h5v1h-5zM26 13h1v1h-1zM28 13h1v1h-1zM33 13h1v1h-1zM4 14h1v1h-1zM7 14h3v1h-3zM11 14h7v1h-7zM20 14h3v1h-3zM25 14h1v1h-1zM28 14h4v1h-4zM34 14h1v1h-1zM2 15h1v1h-1zM4 15h4v1h-4zM11 15h1v1h-1zM18 15h2v1h-2zM21 15h1v1h-1zM23 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM29 15h1v1h-1zM32 15h1v1h-1zM2 16h1v1h-1zM7 16h4v1h-4zM12 16h5v1h-5zM18 16h4v1h-4zM23 16h6v1h-6zM31 16h3v1h-3zM5 17h1v1h-1zM7 17h1v1h-1zM10 17h1v1h-1zM14 17h2v1h-2zM19 17h1v1h-1zM21 17h3v1h-3zM26 17h3v1h-3zM31 17h1v1h-1zM2 18h1v1h-1zM6 18h3v1h-3zM11 18h1v1h-1zM13 18h1v1h-1zM16 18h2v1h-2zM19 18h1v1h-1zM23 18h4v1h-4zM28 18h1v1h-1zM30 18h1v1h-1zM33 18h1v1h-1zM2 19h2v1h-2zM5 19h3v1h-3zM9 19h2v1h-2zM15 19h3v1h-3zM19 19h2v1h-2zM23 19h3v1h-3zM31 19h2v1h-2zM4 20h1v1h-1zM6 20h1v1h-1zM8 20h1v1h-1zM12 20h3v1h-3zM17 20h1v1h-1zM20 20h1v1h-1zM22 20h1v1h-1zM25 20h5v1h-5zM31 20h1v1h-1zM33 20h1v1h-1zM2 21h1v1h-1zM5 21h2v1h-2zM10 21h1v1h-1zM12 21h1v1h-1zM14 21h1v1h-1zM21 21h1v1h-1zM24 21h2v1h-2zM27 21h3v1h-3zM3 22h1v1h-1zM6 22h3v1h-3zM11 22h1v1h-1zM14 22h1v1h-1zM16 22h1v1h-1zM18 22h1v1h-1zM21 22h1v1h-1zM24 22h1v1h-1zM26 22h1v1h-1zM28 22h1v1h-1zM30 22h2v1h-2zM33 22h1v1h-1zM2 23h1v1h-1zM4 23h4v1h-4zM12 23h3v1h-3zM20 23h3v1h-3zM25 23h1v1h-1zM27 23h1v1h-1zM31 23h1v1h-1zM33 23h1v1h-1zM4 24h1v1h-1zM6 24h3v1h-3zM10 24h1v1h-1zM13 24h1v1h-1zM16 24h2v1h-2zM19 24h2v1h-2zM22 24h1v1h-1zM25 24h1v1h-1zM31 24h3v1h-3zM5 25h3v1h-3zM10 25h11v1h-11zM23 25h1v1h-1zM25 25h4v1h-4zM34 25h1v1h-1zM2 26h2v1h-2zM7 26h4v1h-4zM14 26h2v1h-2zM19 26h1v1h-1zM21 26h1v1h-1zM23 26h2v1h-2zM26 26h5v1h-5zM10 27h2v1h-2zM16 27h3v1h-3zM20 27h1v1h-1zM26 27h1v1h-1zM30 27h1v1h-1zM32 27h2v1h-2zM2 28h7v1h-7zM10 28h4v1h-4zM15 28h5v1h-5zM22 28h3v1h-3zM26 28h1v1h-1zM28 28h1v1h-1zM30 28h2v1h-2zM33 28h1v1h-1zM2 29h1v1h-1zM8 29h1v1h-1zM11 29h1v1h-1zM13 29h1v1h-1zM19 29h5v1h-5zM26 29h1v1h-1zM30 29h1v1h-1zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM10 30h1v1h-1zM13 30h1v1h-1zM15 30h1v1h-1zM17 30h1v1h-1zM20 30h1v1h-1zM22 30h1v1h-1zM26 30h6v1h-6zM34 30h1v1h-1zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM11 31h1v1h-1zM13 31h1v1h-1zM15 31h1v1h-1zM18 31h2v1h-2zM21 31h1v1h-1zM23 31h2v1h-2zM26 31h1v1h-1zM28 31h3v1h-3zM33 31h1v1h-1zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM12 32h2v1h-2zM15 32h1v1h-1zM18 32h1v1h-1zM20 32h2v1h-2zM27 32h4v1h-4zM2 33h1v1h-1zM8 33h1v1h-1zM11 33h1v1h-1zM13 33h3v1h-3zM19 33h5v1h-5zM26 33h3v1h-3zM2 34h7v1h-7zM10 34h2v1h-2zM13 34h1v1h-1zM15 34h1v1h-1zM17 34h1v1h-1zM19 34h1v1h-1zM22 34h5v1h-5zM34 34h1v1h-1z";
 const store = {
   get(k,d){try{const v=localStorage.getItem("rootoxy."+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
   set(k,v){try{localStorage.setItem("rootoxy."+k,JSON.stringify(v))}catch(e){}}
@@ -266,9 +282,12 @@ const THEME_ICON={
   light:'<circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
   dark:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'
 };
+function effectiveDark(){const a=document.documentElement.getAttribute("data-theme");return a?a==="dark":matchMedia("(prefers-color-scheme: dark)").matches}
 function applyTheme(){const r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",S.theme);
-  const b=document.getElementById("themeBtn");b.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true">${THEME_ICON[S.theme]}</svg>`;
-  b.setAttribute("aria-label",t(L({auto:"主题：跟随系统",light:"主题：浅色",dark:"主题：深色"}[S.theme],{auto:"Theme: system",light:"Theme: light",dark:"Theme: dark"}[S.theme],{auto:"Tema: sistem",light:"Tema: cerah",dark:"Tema: gelap"}[S.theme])))}
+  const dark=effectiveDark();
+  const b=document.getElementById("themeBtn");b.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true">${dark?THEME_ICON.dark:THEME_ICON.light}</svg>`;
+  b.setAttribute("aria-label",t(dark?L("深色模式，点一下换浅色","Dark mode; tap for light","Mod gelap; ketik untuk cerah"):L("浅色模式，点一下换深色","Light mode; tap for dark","Mod cerah; ketik untuk gelap")))}
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{if(S.theme==="auto")applyTheme()});
 const L = (zh,en,ms)=>({zh,en,ms});
 const t = o => (o && typeof o==="object") ? (o[S.lang||"zh"] ?? o.en) : o;
 const fmt = (n,d=0)=>Number(n).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
@@ -350,8 +369,8 @@ function soilArt(){
    <path d="M340 34 C338 70 330 96 300 140 M336 78 C360 100 392 112 420 140 M332 96 C310 112 268 120 240 132" fill="none" stroke="var(--clay)" stroke-width="7" stroke-linecap="round"/>
    <path d="M340 34 C338 70 330 96 300 140 M336 78 C360 100 392 112 420 140 M332 96 C310 112 268 120 240 132" fill="none" stroke="var(--clay-soft)" stroke-width="2" stroke-linecap="round" opacity=".6"/>
    ${[[316,128,0],[372,112,.6],[288,124,1.2],[400,130,1.8],[350,100,2.4],[262,130,.9]].map(([x,y,dl])=>`<circle class="bub" style="animation-delay:${dl}s" cx="${x}" cy="${y}" r="6" fill="none" stroke="var(--oxy)" stroke-width="2.5"/>`).join("")}
-   <text x="16" y="23" font-family="IBM Plex Mono,monospace" font-size="15" font-weight="600" fill="var(--ink2)">O₂ ↓  ${t(L("黏土 · 田间持水量","heavy clay loam · field capacity","tanah liat berat · kapasiti ladang"))}</text>
-  </svg>`;
+  </svg>
+  <p class="takeaway">${t(L("图：积水的重黏土里，根周围的氧气很少。","Picture: in waterlogged heavy clay there is little oxygen around the roots.","Gambar: dalam tanah liat berat yang bertakung, oksigen di sekeliling akar sangat sedikit."))}</p>`;
 }
 
 /* ---------- illustrations (inline SVG, theme tokens, labels follow the app language) ---------- */
@@ -370,7 +389,7 @@ function illoWet(){ // wet clay vs drained mound
   const lab=L(["积水黏土","根缺氧、发黑","土墩 / 高畦","空气进得去，根白又多"],["Waterlogged clay","Roots starve, turn black","Mound / raised bed","Air gets in; roots white and many"],["Tanah liat bertakung","Akar lemas, menghitam","Batas / permatang tinggi","Udara masuk; akar putih dan banyak"]);
   const l=t(lab);
   return `<svg viewBox="0 0 680 300" style="width:100%;height:auto;display:block" role="img" aria-label="${l[0]} / ${l[2]}">
-   <rect width="680" height="300" fill="var(--surface)" rx="8"/>
+   <rect width="680" height="300" fill="var(--surface)" rx="8 8 0 0"/>
    <!-- left: waterlogged -->
    <rect x="20" y="150" width="300" height="130" fill="var(--clay-soft)" rx="6"/>
    <rect x="20" y="150" width="300" height="130" fill="var(--oxy-soft)" opacity=".7" rx="6"/>
@@ -378,9 +397,8 @@ function illoWet(){ // wet clay vs drained mound
    ${tree(170,150,1,0.8)}
    ${roots(170,150,1,'var(--ink)')}
    <path d="M60 230h20M250 200h22" stroke="var(--ink)" stroke-width="2"/>
-   <text x="170" y="40" text-anchor="middle" font-size="19" fill="var(--ink)" style="${F}">${l[0]}</text>
-   <text x="170" y="296" text-anchor="middle" font-size="15" fill="var(--weak)" style="${F}">${l[1]}</text>
-   <text x="40" y="178" font-size="22" fill="var(--weak)" style="${F}">✕ O₂</text>
+   <text x="170" y="44" text-anchor="middle" font-size="30" fill="var(--ink)" style="${F}">${l[0]}</text>
+   <text x="34" y="190" font-size="34" fill="var(--weak)" style="${F}">✕ O₂</text>
    <!-- right: mound -->
    <rect x="360" y="190" width="300" height="90" fill="var(--clay-soft)" rx="6"/>
    <path d="M380 190q130-90 260 0z" fill="var(--clay-soft)"/>
@@ -390,27 +408,27 @@ function illoWet(){ // wet clay vs drained mound
    ${roots(510,146,1.15,'var(--clay)')}
    <path d="M330 150h20l-6-6m6 6-6 6" fill="none" stroke="var(--oxy)" stroke-width="3" stroke-linecap="round"/>
    <path d="M350 215h-20m0 0l6-6m-6 6 6 6" fill="none" stroke="var(--oxy)" stroke-width="3" stroke-linecap="round" transform="translate(300 0)"/>
-   <text x="510" y="40" text-anchor="middle" font-size="19" fill="var(--ink)" style="${F}">${l[2]}</text>
-   <text x="510" y="296" text-anchor="middle" font-size="15" fill="var(--sig)" style="${F}">${l[3]}</text>
-   <text x="380" y="178" font-size="22" fill="var(--oxy)" style="${F}">✓ O₂</text>
-  </svg>`;
+   <text x="510" y="44" text-anchor="middle" font-size="30" fill="var(--ink)" style="${F}">${l[2]}</text>
+   <text x="372" y="190" font-size="34" fill="var(--oxy)" style="${F}">✓ O₂</text>
+  </svg>
+  <p class="takeaway">${t(L("左：积水黏土，根缺氧、发黑。右：土墩或高畦，空气进得去，根白又多。","Left: waterlogged clay, roots starve and turn black. Right: mound or raised bed, air gets in, roots white and many.","Kiri: tanah liat bertakung, akar lemas dan menghitam. Kanan: batas atau permatang tinggi, udara masuk, akar putih dan banyak."))}</p>`;
 }
 function illoReact(){ // H2O2 -> water + oxygen
   const l=t(L(["双氧水","水","氧气","到了土里"],["Hydrogen peroxide","Water","Oxygen","in the soil"],["Hidrogen peroksida","Air","Oksigen","dalam tanah"]));
-  const bottle=(x,y,lab,fill)=>`<g transform="translate(${x},${y})"><rect x="-26" y="-10" width="52" height="90" rx="8" fill="${fill}" stroke="var(--ink)" stroke-width="2.5"/><rect x="-12" y="-28" width="24" height="20" rx="3" fill="var(--ink)"/><text x="0" y="110" text-anchor="middle" font-size="15" fill="var(--ink)" style="${F}">${lab}</text></g>`;
+  const bottle=(x,y,lab,fill)=>`<g transform="translate(${x},${y})"><rect x="-26" y="-10" width="52" height="90" rx="8" fill="${fill}" stroke="var(--ink)" stroke-width="2.5"/><rect x="-12" y="-28" width="24" height="20" rx="3" fill="var(--ink)"/></g>`;
   return `<svg viewBox="0 0 680 220" style="width:100%;height:auto;display:block" role="img" aria-label="2 H₂O₂ → 2 H₂O + O₂">
-   <rect width="680" height="220" fill="var(--surface)" rx="8"/>
+   <rect width="680" height="220" fill="var(--surface)" rx="8 8 0 0"/>
    ${bottle(90,50,l[0],'var(--oxy-soft)')}
-   <text x="90" y="52" text-anchor="middle" font-size="22" fill="var(--ink)" style="${F}">H₂O₂</text>
-   <text x="180" y="78" text-anchor="middle" font-size="26" fill="var(--ink)" style="${F}">→</text>
-   <text x="180" y="110" text-anchor="middle" font-size="14" fill="var(--ink2)" style="${F}">${l[3]}</text>
+   <text x="90" y="172" text-anchor="middle" font-size="30" fill="var(--ink)" style="${F}">H₂O₂</text>
+   <text x="180" y="100" text-anchor="middle" font-size="40" fill="var(--ink)" style="${F}">→</text>
    ${bottle(270,50,l[1],'var(--sunk)')}
-   <text x="270" y="52" text-anchor="middle" font-size="22" fill="var(--ink)" style="${F}">H₂O</text>
-   <text x="340" y="78" text-anchor="middle" font-size="26" fill="var(--ink)" style="${F}">+</text>
-   <g transform="translate(440,60)">${bubbles([[0,0,22],[50,-18,14],[80,22,18],[30,34,10],[110,-6,10]],'var(--oxy)')}<text x="0" y="8" text-anchor="middle" font-size="18" fill="var(--oxy)" style="${F}">O₂</text><text x="80" y="29" text-anchor="middle" font-size="15" fill="var(--oxy)" style="${F}">O₂</text><text x="55" y="110" text-anchor="middle" font-size="15" fill="var(--ink)" style="${F}">${l[2]}</text></g>
+   <text x="270" y="172" text-anchor="middle" font-size="30" fill="var(--ink)" style="${F}">H₂O</text>
+   <text x="340" y="100" text-anchor="middle" font-size="40" fill="var(--ink)" style="${F}">+</text>
+   <g transform="translate(440,60)">${bubbles([[0,0,22],[50,-18,14],[80,22,18],[30,34,10],[110,-6,10]],'var(--oxy)')}<text x="0" y="9" text-anchor="middle" font-size="24" fill="var(--oxy)" style="${F}">O₂</text><text x="80" y="30" text-anchor="middle" font-size="20" fill="var(--oxy)" style="${F}">O₂</text></g>
    <path d="M560 40c40 0 60 20 60 60s-20 60-60 60" fill="none" stroke="var(--line)" stroke-width="2"/>
    ${roots(620,110,0.8)}
-  </svg>`;
+  </svg>
+  <p class="takeaway">${t(L("双氧水 → 水 + 氧气，到了土里就分解。","Hydrogen peroxide → water + oxygen, once it is in the soil.","Hidrogen peroksida → air + oksigen, sebaik sahaja berada dalam tanah."))}</p>`;
 }
 /* which tile is selected on the home screen → what the pots drawing emphasises */
 const TILES=[
@@ -491,6 +509,22 @@ function illoApply(c){ // how to apply: pictures only; the words are HTML below 
 
 const DOSE_WORK=L("用量的两个数字互相矛盾。论文写浓度为「1 mg kg⁻¹（即 1 ppm）的 50% 双氧水」，又写整季每棵约 700 mL。用论文自己的用水效率反推，每棵整季只用了约 1,124 升水；700 mL 的 50% 双氧水（约 419 g）溶在这些水里，平均约 370 mg/L，若只在最后 10% 的灌溉时间注入，约 3,700 mg/L（0.37%），都远高于 1 ppm。论文没有说明哪个数字正确。","The two dose figures contradict each other. The paper gives the strength as \"1 mg kg⁻¹ (i.e. 1 ppm) of 50% H₂O₂\" and also says about 700 mL per tree for the season. Working back from the paper's own water use efficiency, each tree received only about 1,124 L of water all season. 700 mL of 50% H₂O₂ (about 419 g) in that water averages about 370 mg/L, or about 3,700 mg/L (0.37%) if injected only in the last 10% of each irrigation. Both are far above 1 ppm. The paper does not say which figure is right.","Dua angka dos bercanggah. Kertas menyatakan kekuatan \"1 mg kg⁻¹ (iaitu 1 ppm) H₂O₂ 50%\" dan juga kira-kira 700 mL setiap pokok untuk satu musim. Dikira semula daripada kecekapan guna air kertas itu sendiri, setiap pokok hanya menerima kira-kira 1,124 L air sepanjang musim. 700 mL H₂O₂ 50% (kira-kira 419 g) dalam air itu purata kira-kira 370 mg/L, atau kira-kira 3,700 mg/L (0.37%) jika disuntik hanya pada 10% terakhir setiap pengairan. Kedua-duanya jauh melebihi 1 ppm. Kertas tidak menyatakan angka mana yang betul.");
 
+
+function shareText(){return t(L(`根区补氧 RootOxy：双氧水能不能给积水黏土里的榴莲根补氧？一篇智利鳄梨论文的结果、原理、试验规划和急救，中文/English/BM，免费，可离线使用。\n${APP_URL}`,`RootOxy 根区补氧: can hydrogen peroxide give oxygen to roots in waterlogged clay? Results of a Chilean avocado study, how it works, a trial planner and first aid. 中文/English/BM, free, works offline.\n${APP_URL}`,`RootOxy 根区补氧: bolehkah hidrogen peroksida membekalkan oksigen kepada akar dalam tanah liat bertakung? Keputusan kajian avokado Chile, cara ia berfungsi, perancang ujian dan pertolongan cemas. 中文/English/BM, percuma, berfungsi luar talian.\n${APP_URL}`))}
+function shareBody(){
+  return `<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+   <svg viewBox="0 0 ${QR_N} ${QR_N}" style="width:200px;max-width:100%;height:auto;flex:none;border:8px solid #fff;background:#fff;border-radius:6px" role="img" aria-label="QR ${APP_URL}"><rect width="${QR_N}" height="${QR_N}" fill="#fff"/><path d="${QR_PATH}" fill="#000"/></svg>
+   <div style="flex:1;min-width:200px;display:flex;flex-direction:column;gap:10px">
+    <p>${t(L("用手机相机扫一扫就能打开；或把链接发给朋友。","Scan with a phone camera to open, or send the link to a friend.","Imbas dengan kamera telefon untuk membuka, atau hantar pautan kepada rakan."))}</p>
+    <p class="num" style="word-break:break-all;font-weight:600">${APP_URL}</p>
+    <div class="seg">
+     <button class="btn" id="shWa"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M8.5 8.5c0 4 3 7 7 7l1.5-1.5-2-1.5-1.2 1a5 5 0 0 1-3.3-3.3l1-1.2-1.5-2z" fill="currentColor"/></svg> WhatsApp</button>
+     <button class="btn2" id="shCopy">${t(L("复制链接","Copy link","Salin pautan"))}</button><span class="toast" id="shToast"></span>
+    </div>
+   </div>
+  </div>`;
+}
+
 function sourcesBody(){
   return `
    <p class="note">${t(L("本软件的每个数字都来自下面第一篇论文。链接会在浏览器打开；论文是英文的，可以免费下载。","Every number in this app comes from the first paper below. Links open in your browser; the paper is in English and free to download.","Setiap angka dalam aplikasi ini datang daripada kertas pertama di bawah. Pautan dibuka dalam pelayar; kertas itu dalam bahasa Inggeris dan percuma dimuat turun."))}</p>
@@ -561,7 +595,8 @@ function viewSum(){
   </section>
   <div class="verdict">
    <h2>${t(L("结论：有希望，未证实","Verdict: promising, not proven","Kesimpulan: berpotensi, belum terbukti"))}</h2>
-   <p>${t(L("盆栽鳄梨的地上部分长得更大，但测得的土壤含氧量没有显著变化，也没有在果园试过。先解决排水；要试双氧水，只在少数树上，与不处理的对照树并排小规模试验。","Potted avocado trees grew bigger above ground, but measured soil oxygen did not change significantly, and the method was never tested in an orchard. Fix drainage first. If you try H₂O₂, run a small side-by-side trial against untreated control trees.","Pokok avokado dalam pasu tumbuh lebih besar di atas tanah, tetapi oksigen tanah yang diukur tidak berubah dengan ketara, dan kaedah ini belum diuji di kebun. Betulkan saliran dahulu. Jika mahu cuba H₂O₂, buat ujian kecil bersebelahan dengan pokok kawalan yang tidak dirawat."))}</p>
+   <p><b>${t(L("论文作者的结论：","The authors' conclusion:","Kesimpulan penulis:"))}</b> ${t(L("盆栽鳄梨的地上部分明显长得更大，用水效率也提高；但每片叶的光合、气孔、蒸腾没有变化，测得的土壤含氧量也没有显著变化。作者认为双氧水「可能」是改善重黏土含氧量的一个方法，但要先在果园规模试验可行性和成本。","Potted avocado trees grew clearly bigger above ground and used water more efficiently; per-leaf photosynthesis, stomata and transpiration did not change, and measured soil oxygen did not change significantly. The authors say H₂O₂ \"might\" be a way to improve oxygen in heavy clay, but orchard-scale trials of practicality and cost are needed first.","Pokok avokado dalam pasu tumbuh jelas lebih besar di atas tanah dan menggunakan air dengan lebih cekap; fotosintesis, stomata dan transpirasi setiap daun tidak berubah, dan oksigen tanah yang diukur tidak berubah dengan ketara. Penulis berkata H₂O₂ \"mungkin\" satu cara untuk menambah oksigen dalam tanah liat berat, tetapi ujian skala kebun tentang kepraktisan dan kos diperlukan dahulu."))}</p>
+   <p><b>${t(L("本软件的建议：","This app's advice:","Nasihat aplikasi ini:"))}</b> ${t(L("先解决排水（论文里的智利果农本来就种在土墩上）。要试双氧水，当作一个选项，在少数树上与不处理的对照树并排小规模试验，用下面的规划。","Fix drainage first (the Chilean growers in the paper already plant on mounds). If you try H₂O₂, treat it as one option: a small side-by-side trial on a few trees against untreated control trees, using the planner below.","Betulkan saliran dahulu (penanam Chile dalam kertas memang menanam di atas batas). Jika mahu cuba H₂O₂, anggap ia satu pilihan: ujian kecil bersebelahan pada beberapa pokok berbanding pokok kawalan yang tidak dirawat, menggunakan perancang di bawah."))}</p>
   </div>
   <details class="plan-det" id="planner" ${S.planOpen?"open":""}>
    <summary>${t(L("双氧水小试验规划（点开）","H₂O₂ small-trial planner (tap to open)","Perancang ujian kecil H₂O₂ (ketik untuk buka)"))}</summary>
@@ -590,6 +625,10 @@ function viewSum(){
    <summary>${t(L("参考资料，自己查证","Sources, so you can check for yourself","Sumber, supaya anda boleh semak sendiri"))}</summary>
    <div class="det-body">${sourcesBody()}</div>
   </details>
+  <section class="card" id="share">
+   <h2>${t(L("分享给朋友","Share with friends","Kongsi dengan rakan"))}</h2>
+   ${shareBody()}
+  </section>
   <p class="note num" style="text-align:center">${APP_VER}</p>`;
 }
 
@@ -869,7 +908,16 @@ document.addEventListener("click",e=>{
     const toast=document.getElementById("lgToast");
     const done=()=>{toast.textContent=t(L("已复制","Copied","Disalin"));setTimeout(()=>toast.textContent="",2000)};
     if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done)); else fallbackCopy(txt,done);}
-  else if(b.id==="themeBtn"){const o=["auto","light","dark"];S.theme=o[(o.indexOf(S.theme)+1)%3];store.set("theme",S.theme);applyTheme()}
+  else if(b.id==="shWa"){
+    const sh=document.getElementById("shSheet");document.getElementById("shTitle").textContent=t(L("发送到 WhatsApp 前先看看","Preview before sending to WhatsApp","Pratonton sebelum hantar ke WhatsApp"));
+    const ta=document.getElementById("shMsg");ta.value=shareText();
+    const a=document.getElementById("shSend");a.textContent=t(L("打开 WhatsApp 发送","Send in WhatsApp","Hantar dalam WhatsApp"));
+    const upd=()=>{a.href="https://wa.me/?text="+encodeURIComponent(ta.value)};upd();ta.oninput=upd;
+    document.getElementById("shCancel").textContent=t(L("取消","Cancel","Batal"));sh.hidden=false}
+  else if(b.id==="shCancel"){document.getElementById("shSheet").hidden=true}
+  else if(b.id==="shCopy"){const toast=document.getElementById("shToast");const done=()=>{toast.textContent=t(L("已复制","Copied","Disalin"));setTimeout(()=>toast.textContent="",2000)};
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(APP_URL).then(done).catch(()=>fallbackCopy(APP_URL,done)); else fallbackCopy(APP_URL,done)}
+  else if(b.id==="themeBtn"){S.theme=effectiveDark()?"light":"dark";store.set("theme",S.theme);applyTheme()}
   else if(b.dataset.r){S.r=+b.dataset.r;render()}
   else if(b.dataset.pick){S.lang=b.dataset.pick;store.set("lang",S.lang);document.getElementById("picker").hidden=true;render()}
   else if(b.id==="homeBtn") go("sum");
@@ -905,6 +953,8 @@ document.getElementById("updClose").addEventListener("click",()=>{document.getEl
 /* version check: the service worker keeps index.html fresh; the page notices the version changed since last launch */
 {const last=store.get("lastVer",null);if(last&&last!==APP_VER&&S.lang) setTimeout(()=>showUpdated(APP_VER),400);store.set("lastVer",APP_VER)}
 if("serviceWorker" in navigator){navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.type==="updated"&&e.data.version&&e.data.version!==APP_VER) showUpdated(e.data.version)})}
+document.getElementById("shSend").addEventListener("click",()=>{setTimeout(()=>{document.getElementById("shSheet").hidden=true},300)});
+document.getElementById("shSheet").addEventListener("click",e=>{if(e.target.id==="shSheet")e.target.hidden=true});
 const topBtn=document.getElementById("topBtn");
 function onScroll(){topBtn.hidden = window.scrollY < 400}
 window.addEventListener("scroll",onScroll,{passive:true});
