@@ -226,7 +226,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surfa
 <button class="totop" id="topBtn" aria-label="Back to top" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 
 <div class="sheet" id="shSheet" hidden>
-  <div class="sheet-in">
+  <div class="sheet-in" role="dialog" aria-modal="true" aria-labelledby="shTitle">
    <h2 id="shTitle"></h2>
    <textarea id="shMsg" rows="7"></textarea>
    <div class="seg">
@@ -254,29 +254,31 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surfa
 
 <script>
 (function(){
-const APP_VER = "v1.6.3 · 2026-10-14";
+const APP_VER = "v1.7.0 · 2026-10-14";
 const APP_URL = "https://stanleywoosweeleong.github.io/rootoxy/";
 const QR_N = 37, QR_PATH = "M2 2h7v1h-7zM10 2h2v1h-2zM13 2h2v1h-2zM16 2h5v1h-5zM23 2h1v1h-1zM25 2h1v1h-1zM28 2h7v1h-7zM2 3h1v1h-1zM8 3h1v1h-1zM13 3h2v1h-2zM18 3h2v1h-2zM21 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM34 3h1v1h-1zM2 4h1v1h-1zM4 4h3v1h-3zM8 4h1v1h-1zM11 4h1v1h-1zM14 4h2v1h-2zM22 4h2v1h-2zM25 4h2v1h-2zM28 4h1v1h-1zM30 4h3v1h-3zM34 4h1v1h-1zM2 5h1v1h-1zM4 5h3v1h-3zM8 5h1v1h-1zM10 5h5v1h-5zM16 5h2v1h-2zM19 5h2v1h-2zM22 5h1v1h-1zM24 5h1v1h-1zM26 5h1v1h-1zM28 5h1v1h-1zM30 5h3v1h-3zM34 5h1v1h-1zM2 6h1v1h-1zM4 6h3v1h-3zM8 6h1v1h-1zM10 6h2v1h-2zM13 6h1v1h-1zM16 6h1v1h-1zM20 6h3v1h-3zM25 6h1v1h-1zM28 6h1v1h-1zM30 6h3v1h-3zM34 6h1v1h-1zM2 7h1v1h-1zM8 7h1v1h-1zM10 7h1v1h-1zM12 7h2v1h-2zM15 7h2v1h-2zM18 7h1v1h-1zM21 7h1v1h-1zM24 7h1v1h-1zM26 7h1v1h-1zM28 7h1v1h-1zM34 7h1v1h-1zM2 8h7v1h-7zM10 8h1v1h-1zM12 8h1v1h-1zM14 8h1v1h-1zM16 8h1v1h-1zM18 8h1v1h-1zM20 8h1v1h-1zM22 8h1v1h-1zM24 8h1v1h-1zM26 8h1v1h-1zM28 8h7v1h-7zM10 9h4v1h-4zM16 9h5v1h-5zM23 9h1v1h-1zM25 9h1v1h-1zM2 10h1v1h-1zM6 10h1v1h-1zM8 10h3v1h-3zM12 10h2v1h-2zM19 10h1v1h-1zM21 10h11v1h-11zM34 10h1v1h-1zM2 11h1v1h-1zM4 11h3v1h-3zM9 11h1v1h-1zM14 11h2v1h-2zM17 11h2v1h-2zM20 11h1v1h-1zM23 11h3v1h-3zM27 11h1v1h-1zM31 11h3v1h-3zM2 12h1v1h-1zM4 12h2v1h-2zM7 12h2v1h-2zM10 12h2v1h-2zM13 12h2v1h-2zM17 12h3v1h-3zM22 12h1v1h-1zM25 12h1v1h-1zM31 12h1v1h-1zM33 12h1v1h-1zM2 13h3v1h-3zM9 13h2v1h-2zM12 13h2v1h-2zM16 13h1v1h-1zM19 13h5v1h-5zM26 13h1v1h-1zM28 13h1v1h-1zM33 13h1v1h-1zM4 14h1v1h-1zM7 14h3v1h-3zM11 14h7v1h-7zM20 14h3v1h-3zM25 14h1v1h-1zM28 14h4v1h-4zM34 14h1v1h-1zM2 15h1v1h-1zM4 15h4v1h-4zM11 15h1v1h-1zM18 15h2v1h-2zM21 15h1v1h-1zM23 15h1v1h-1zM25 15h1v1h-1zM27 15h1v1h-1zM29 15h1v1h-1zM32 15h1v1h-1zM2 16h1v1h-1zM7 16h4v1h-4zM12 16h5v1h-5zM18 16h4v1h-4zM23 16h6v1h-6zM31 16h3v1h-3zM5 17h1v1h-1zM7 17h1v1h-1zM10 17h1v1h-1zM14 17h2v1h-2zM19 17h1v1h-1zM21 17h3v1h-3zM26 17h3v1h-3zM31 17h1v1h-1zM2 18h1v1h-1zM6 18h3v1h-3zM11 18h1v1h-1zM13 18h1v1h-1zM16 18h2v1h-2zM19 18h1v1h-1zM23 18h4v1h-4zM28 18h1v1h-1zM30 18h1v1h-1zM33 18h1v1h-1zM2 19h2v1h-2zM5 19h3v1h-3zM9 19h2v1h-2zM15 19h3v1h-3zM19 19h2v1h-2zM23 19h3v1h-3zM31 19h2v1h-2zM4 20h1v1h-1zM6 20h1v1h-1zM8 20h1v1h-1zM12 20h3v1h-3zM17 20h1v1h-1zM20 20h1v1h-1zM22 20h1v1h-1zM25 20h5v1h-5zM31 20h1v1h-1zM33 20h1v1h-1zM2 21h1v1h-1zM5 21h2v1h-2zM10 21h1v1h-1zM12 21h1v1h-1zM14 21h1v1h-1zM21 21h1v1h-1zM24 21h2v1h-2zM27 21h3v1h-3zM3 22h1v1h-1zM6 22h3v1h-3zM11 22h1v1h-1zM14 22h1v1h-1zM16 22h1v1h-1zM18 22h1v1h-1zM21 22h1v1h-1zM24 22h1v1h-1zM26 22h1v1h-1zM28 22h1v1h-1zM30 22h2v1h-2zM33 22h1v1h-1zM2 23h1v1h-1zM4 23h4v1h-4zM12 23h3v1h-3zM20 23h3v1h-3zM25 23h1v1h-1zM27 23h1v1h-1zM31 23h1v1h-1zM33 23h1v1h-1zM4 24h1v1h-1zM6 24h3v1h-3zM10 24h1v1h-1zM13 24h1v1h-1zM16 24h2v1h-2zM19 24h2v1h-2zM22 24h1v1h-1zM25 24h1v1h-1zM31 24h3v1h-3zM5 25h3v1h-3zM10 25h11v1h-11zM23 25h1v1h-1zM25 25h4v1h-4zM34 25h1v1h-1zM2 26h2v1h-2zM7 26h4v1h-4zM14 26h2v1h-2zM19 26h1v1h-1zM21 26h1v1h-1zM23 26h2v1h-2zM26 26h5v1h-5zM10 27h2v1h-2zM16 27h3v1h-3zM20 27h1v1h-1zM26 27h1v1h-1zM30 27h1v1h-1zM32 27h2v1h-2zM2 28h7v1h-7zM10 28h4v1h-4zM15 28h5v1h-5zM22 28h3v1h-3zM26 28h1v1h-1zM28 28h1v1h-1zM30 28h2v1h-2zM33 28h1v1h-1zM2 29h1v1h-1zM8 29h1v1h-1zM11 29h1v1h-1zM13 29h1v1h-1zM19 29h5v1h-5zM26 29h1v1h-1zM30 29h1v1h-1zM2 30h1v1h-1zM4 30h3v1h-3zM8 30h1v1h-1zM10 30h1v1h-1zM13 30h1v1h-1zM15 30h1v1h-1zM17 30h1v1h-1zM20 30h1v1h-1zM22 30h1v1h-1zM26 30h6v1h-6zM34 30h1v1h-1zM2 31h1v1h-1zM4 31h3v1h-3zM8 31h1v1h-1zM11 31h1v1h-1zM13 31h1v1h-1zM15 31h1v1h-1zM18 31h2v1h-2zM21 31h1v1h-1zM23 31h2v1h-2zM26 31h1v1h-1zM28 31h3v1h-3zM33 31h1v1h-1zM2 32h1v1h-1zM4 32h3v1h-3zM8 32h1v1h-1zM12 32h2v1h-2zM15 32h1v1h-1zM18 32h1v1h-1zM20 32h2v1h-2zM27 32h4v1h-4zM2 33h1v1h-1zM8 33h1v1h-1zM11 33h1v1h-1zM13 33h3v1h-3zM19 33h5v1h-5zM26 33h3v1h-3zM2 34h7v1h-7zM10 34h2v1h-2zM13 34h1v1h-1zM15 34h1v1h-1zM17 34h1v1h-1zM19 34h1v1h-1zM22 34h5v1h-5zM34 34h1v1h-1z";
 const store = {
-  get(k,d){try{const v=localStorage.getItem("rootoxy."+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
-  set(k,v){try{localStorage.setItem("rootoxy."+k,JSON.stringify(v))}catch(e){}}
+  get(k,d,check){try{const v=localStorage.getItem("rootoxy."+k);if(v===null)return d;const x=JSON.parse(v);return (check?check(x):x!==null&&x!==undefined)?x:d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("rootoxy."+k,JSON.stringify(v));return true}catch(e){store.failed=true;try{showSaveFail()}catch(_){}return false}}
 };
+const isNum=x=>typeof x==="number"&&isFinite(x), isStr=x=>typeof x==="string", isObj=x=>x&&typeof x==="object"&&!Array.isArray(x);
+const isLog=x=>Array.isArray(x)&&x.every(e=>isObj(e)&&isStr(e.d)&&isNum(e.ml));
 const S = {
-  lang: store.get("lang", null),
-  tab: store.get("tab", "sum"),
-  fs: store.get("fs", 17),
-  grp: store.get("grp", "growth"),
-  stock: store.get("stock", 50),
-  trees: store.get("trees", 5),
-  months: store.get("months", 4),
+  lang: store.get("lang", null, x=>["zh","en","ms"].includes(x)),
+  tab: store.get("tab", "sum", isStr),
+  fs: store.get("fs", 17, x=>[17,19,21].includes(x)),
+  grp: store.get("grp", "growth", isStr),
+  stock: store.get("stock", 50, x=>[30,35,50].includes(x)),
+  trees: store.get("trees", 5, x=>isNum(x)&&x>=1&&x<=500),
+  months: store.get("months", 4, x=>isNum(x)&&x>=1&&x<=12),
   r: 0.54,
   tile: 0,
-  planOpen: store.get("planOpen", false),
-  apps: store.get("apps", 2),
-  water: store.get("water", 10),
-  theme: store.get("theme", "auto"),
-  checks: store.get("checks", {}),
-  log: store.get("log", [])
+  planOpen: store.get("planOpen", false, x=>typeof x==="boolean"),
+  apps: store.get("apps", 2, x=>[1,2,3,7].includes(x)),
+  water: store.get("water", 10, x=>isNum(x)&&x>=0.5&&x<=200),
+  theme: store.get("theme", "auto", x=>["auto","light","dark"].includes(x)),
+  checks: store.get("checks", {}, isObj),
+  log: store.get("log", [], isLog)
 };
 const THEME_ICON={
   auto:'<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
@@ -759,6 +761,7 @@ function plannerBody(){
      <label for="water">${t(L("每棵每次稀释用水（升）","Water per tree per application (L)","Air setiap pokok setiap kali (L)"))}</label>
      <input id="water" type="number" inputmode="decimal" min="0.5" max="200" step="0.5" value="${S.water}">
     </div>
+    <p class="toast" id="planMsg" style="color:var(--weak)"></p>
     <div class="seg"><button class="btn2" id="planReset">${t(L("恢复默认值","Reset to defaults","Set semula lalai"))}</button></div>
    </div>
    <div class="results" id="calcOut">${calcOut(c)}</div>
@@ -816,8 +819,9 @@ function viewFarm(){
     </div>
     <div class="check"><label><input type="checkbox" id="lgRain"><span>${t(L("今天有积水 / 大雨","Waterlogged or heavy rain today","Bertakung atau hujan lebat hari ini"))}</span></label></div>
     <div class="seg"><button class="btn" id="lgAdd">${t(L("记录这次施用","Add entry","Tambah catatan"))}</button><button class="btn2" id="lgCopy" ${S.log.length?"":"disabled"}>${t(L("复制全部记录","Copy all entries","Salin semua catatan"))}</button><span class="toast" id="lgToast"></span></div>
+    <details><summary>${t(L("从备份粘贴导入","Import from a pasted backup","Import daripada salinan sandaran"))}</summary><div class="det-body"><p class="note">${t(L("把之前「复制全部记录」的内容粘贴到这里，再按导入。重复的记录会跳过。","Paste what you copied earlier with \"Copy all entries\", then tap Import. Duplicate entries are skipped.","Tampal apa yang anda salin dahulu dengan \"Salin semua catatan\", kemudian ketik Import. Catatan berulang dilangkau."))}</p><textarea id="lgPaste" rows="4"></textarea><div class="seg"><button class="btn2" id="lgImport">${t(L("导入","Import","Import"))}</button></div></div></details>
    </div>
-   ${S.log.length?`<div style="display:flex;flex-direction:column;gap:8px">${S.log.map((e,i)=>`<div class="logrow"><div><div class="meta">${e.d} · ${e.tree||"—"} · ${fmt(e.ml,1)} mL${e.pc?` (${e.pc}%)`:""}${e.rain?" · ☔":""}</div>${e.note?`<div>${esc(e.note)}</div>`:""}</div><button class="del" data-del="${i}" aria-label="${t(L("删除","Delete","Padam"))}">✕</button></div>`).join("")}</div>`
+   ${S.log.length?`<div style="display:flex;flex-direction:column;gap:8px">${S.log.map((e,i)=>`<div class="logrow"><div><div class="meta">${esc(e.d)} · ${esc(e.tree||"—")} · ${fmt(e.ml,1)} mL${e.pc?` (${e.pc}%)`:""}${e.rain?" · ☔":""}</div>${e.note?`<div>${esc(e.note)}</div>`:""}</div><button class="del" data-del="${i}" aria-label="${t(L("删除","Delete","Padam"))}">✕</button></div>`).join("")}</div>`
    :`<p class="note">${t(L("还没有记录。每次施用后在这里记一笔；记录只保存在这部手机上。","No entries yet. Add one after each application; entries are kept only on this phone.","Belum ada catatan. Tambah selepas setiap kali guna; catatan disimpan hanya pada telefon ini."))}</p>`}
   </section>
 
@@ -901,9 +905,16 @@ document.addEventListener("click",e=>{
   else if(b.dataset.apps){S.apps=+b.dataset.apps;store.set("apps",S.apps);render()}
   else if(b.dataset.del!==undefined){S.log.splice(+b.dataset.del,1);store.set("log",S.log);render()}
   else if(b.id==="lgAdd"){
-    const ml=parseFloat(document.getElementById("lgMl").value);
-    const e={d:document.getElementById("lgDate").value||today(),pc:S.stock,tree:document.getElementById("lgTree").value.trim().slice(0,20),ml:isFinite(ml)?ml:0,rain:document.getElementById("lgRain").checked,note:document.getElementById("lgNote").value.trim().slice(0,60)};
-    S.log.unshift(e);store.set("log",S.log);render();}
+    const ml=parseFloat(document.getElementById("lgMl").value);const toast=document.getElementById("lgToast");
+    if(!isFinite(ml)||ml<=0){toast.textContent=t(L("用量必须大于 0","Amount must be more than 0","Jumlah mesti lebih daripada 0"));setTimeout(()=>toast.textContent="",3000);return}
+    const e={d:document.getElementById("lgDate").value||today(),pc:S.stock,tree:document.getElementById("lgTree").value.trim().slice(0,20),ml,rain:document.getElementById("lgRain").checked,note:document.getElementById("lgNote").value.trim().slice(0,60)};
+    S.log.unshift(e);const ok=store.set("log",S.log);render();if(!ok)showSaveFail();}
+  else if(b.id==="lgImport"){
+    const lines=document.getElementById("lgPaste").value.split(/\r?\n/).map(l=>l.split("\t")).filter(c=>c.length>=5&&/^\d{4}-\d{2}-\d{2}$/.test(c[0]));
+    let n=0;for(const c of lines){const ml=parseFloat(c[2]);if(!isFinite(ml)||ml<=0)continue;const e={d:c[0],tree:c[1].slice(0,20),ml,pc:[30,35,50].includes(+c[3])?+c[3]:undefined,rain:c[4]==="yes",note:(c[5]||"").slice(0,60)};
+      if(!S.log.some(x=>x.d===e.d&&x.tree===e.tree&&x.ml===e.ml&&x.note===e.note)){S.log.push(e);n++}}
+    S.log.sort((a,b)=>b.d.localeCompare(a.d));const ok=store.set("log",S.log);render();
+    const toast=document.getElementById("lgToast");toast.textContent=t(L(`已导入 ${n} 条`,`Imported ${n}`,`${n} diimport`));setTimeout(()=>toast.textContent="",3000);if(!ok)showSaveFail();}
   else if(b.id==="lgCopy"){
     const txt=["date\ttree\tmL\tH2O2 %\train\tnote",...S.log.map(e=>[e.d,e.tree,e.ml,e.pc||"",e.rain?"yes":"no",e.note].join("\t"))].join("\n");
     const toast=document.getElementById("lgToast");
@@ -914,7 +925,7 @@ document.addEventListener("click",e=>{
     const ta=document.getElementById("shMsg");ta.value=shareText();
     const a=document.getElementById("shSend");a.textContent=t(L("打开 WhatsApp 发送","Send in WhatsApp","Hantar dalam WhatsApp"));
     const upd=()=>{a.href="https://wa.me/?text="+encodeURIComponent(ta.value)};upd();ta.oninput=upd;
-    document.getElementById("shCancel").textContent=t(L("取消","Cancel","Batal"));sh.hidden=false}
+    document.getElementById("shCancel").textContent=t(L("取消","Cancel","Batal"));sh.hidden=false;ta.focus()}
   else if(b.id==="shCancel"){document.getElementById("shSheet").hidden=true}
   else if(b.id==="shCopy"){const toast=document.getElementById("shToast");const done=()=>{toast.textContent=t(L("已复制","Copied","Disalin"));setTimeout(()=>toast.textContent="",2000)};
     if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(APP_URL).then(done).catch(()=>fallbackCopy(APP_URL,done)); else fallbackCopy(APP_URL,done)}
@@ -934,7 +945,10 @@ document.addEventListener("input",e=>{
     document.getElementById("pTot").textContent=sign(p.tot,1)+"%";
     document.querySelectorAll("[data-r]").forEach(x=>x.setAttribute("aria-pressed",String(+x.dataset.r===S.r)));}
   if(el.id==="trees"||el.id==="months"||el.id==="water"){
-    const v=parseFloat(el.value);if(!isFinite(v)||v<=0)return;
+    const lim={trees:[1,500],months:[1,12],water:[0.5,200]}[el.id];let v=parseFloat(el.value);
+    const msg=document.getElementById("planMsg");
+    if(!isFinite(v)){msg.textContent=t(L("请输入数字","Enter a number","Masukkan nombor"));return}
+    if(v<lim[0]||v>lim[1]){v=Math.min(lim[1],Math.max(lim[0],v));el.value=v;msg.textContent=t(L(`范围 ${lim[0]}–${lim[1]}，已改为 ${v}`,`Allowed ${lim[0]}–${lim[1]}; set to ${v}`,`Julat ${lim[0]}–${lim[1]}; ditetapkan ke ${v}`))}else msg.textContent="";
     S[el.id]=v;store.set(el.id,v);
     const cc=calc();document.getElementById("calcOut").innerHTML=calcOut(cc);document.getElementById("applyIllo").innerHTML=illoApply(cc);}
 });
@@ -953,9 +967,12 @@ function showUpdated(v){
 document.getElementById("updClose").addEventListener("click",()=>{document.getElementById("upd").hidden=true});
 /* version check: the service worker keeps index.html fresh; the page notices the version changed since last launch */
 {const last=store.get("lastVer",null);if(last&&last!==APP_VER&&S.lang) setTimeout(()=>showUpdated(APP_VER),400);store.set("lastVer",APP_VER)}
-if("serviceWorker" in navigator){navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.type==="updated"&&e.data.version&&e.data.version!==APP_VER) showUpdated(e.data.version)})}
+if("serviceWorker" in navigator){navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.type==="updated"&&e.data.version&&e.data.version!==APP_VER){
+  document.getElementById("updTxt").textContent=t(L(`有新版本 ${e.data.version}，关闭后重新打开即可使用`,`New version ${e.data.version} is ready; close and reopen the app to use it`,`Versi baharu ${e.data.version} sedia; tutup dan buka semula aplikasi`));document.getElementById("upd").hidden=false}})}
 document.getElementById("shSend").addEventListener("click",()=>{setTimeout(()=>{document.getElementById("shSheet").hidden=true},300)});
-document.getElementById("shSheet").addEventListener("click",e=>{if(e.target.id==="shSheet")e.target.hidden=true});
+document.getElementById("shSheet").addEventListener("click",e=>{if(e.target.id==="shSheet"){e.target.hidden=true;document.getElementById("shWa")?.focus()}});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){const sh=document.getElementById("shSheet");if(!sh.hidden){sh.hidden=true;document.getElementById("shWa")?.focus()}}});
+function showSaveFail(){const u=document.getElementById("upd");document.getElementById("updTxt").textContent=t(L("无法保存到这部手机（存储被禁用或已满）。记录在关闭后会消失，请先「复制全部记录」。","Cannot save on this phone (storage blocked or full). Entries will be lost when the app closes; use \"Copy all entries\" first.","Tidak dapat menyimpan pada telefon ini (storan disekat atau penuh). Catatan akan hilang apabila aplikasi ditutup; gunakan \"Salin semua catatan\" dahulu."));u.style.background="var(--warn-bg)";u.style.color="var(--weak)";u.style.borderColor="var(--weak)";u.hidden=false}
 const topBtn=document.getElementById("topBtn");
 function onScroll(){topBtn.hidden = window.scrollY < 400}
 window.addEventListener("scroll",onScroll,{passive:true});
