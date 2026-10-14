@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="zh-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="RootOxy">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}</style>
+<title>RootOxy 根区补氧</title>
+<meta name="theme-color" content="#0E6B74">
+<style>
+/* Layout: one narrow reading column, sticky header, icon nav fixed at the bottom; soil-and-oxygen palette */
+:root{
+  --bg:#EFF2EC; --surface:#FFFFFF; --sunk:#E3E8E0;
+  --ink:#16201C; --ink2:#2F3B36; --line:#BCC6BC;
+  --clay:#7A4E31; --clay-soft:#EADFD3;
+  --oxy:#0E6B74; --oxy-soft:#D3ECEE; --on-oxy:#FFFFFF;
+  --ctl:#7D776A;
+  --sig:#1F6F2A; --sig-bg:#DCEFD9;
+  --weak:#8A4E00; --weak-bg:#FBE8C8;
+  --ns:#3F4A45; --ns-bg:#E2E6E1;
+  --warn-bg:#FFF0D6; --warn-line:#C98A1E;
+  /* system faces only, so offline and online look the same */
+  --display:-apple-system,"Segoe UI Variable Display","Segoe UI",Roboto,"PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --body:-apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei","Noto Sans SC","Noto Sans CJK SC",system-ui,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono",monospace;
+  --fs:17px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1517; --surface:#182124; --sunk:#202B2E;
+  --ink:#ECF1EE; --ink2:#CFD8D3; --line:#34423F;
+  --clay:#D49B74; --clay-soft:#2E241D;
+  --oxy:#5CC8D0; --oxy-soft:#123A3E; --on-oxy:#06262A;
+  --ctl:#A9A291;
+  --sig:#7FD487; --sig-bg:#173A1C;
+  --weak:#F2B35A; --weak-bg:#3A2A10;
+  --ns:#C2CCC7; --ns-bg:#283330;
+  --warn-bg:#33270F; --warn-line:#C98A1E;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1517; --surface:#182124; --sunk:#202B2E;
+  --ink:#ECF1EE; --ink2:#CFD8D3; --line:#34423F;
+  --clay:#D49B74; --clay-soft:#2E241D;
+  --oxy:#5CC8D0; --oxy-soft:#123A3E; --on-oxy:#06262A;
+  --ctl:#A9A291;
+  --sig:#7FD487; --sig-bg:#173A1C;
+  --weak:#F2B35A; --weak-bg:#3A2A10;
+  --ns:#C2CCC7; --ns-bg:#283330;
+  --warn-bg:#33270F; --warn-line:#C98A1E;
+  color-scheme:dark}
+
+html{font-size:var(--fs)}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-weight:500;font-size:1rem;line-height:1.55;-webkit-text-size-adjust:100%}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.2;color:var(--ink)}
+h1{font-size:1.65rem;font-weight:700}
+h2{font-size:1.3rem;font-weight:700}
+h3{font-size:1.08rem;font-weight:700}
+p{margin:0}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid var(--oxy);outline-offset:2px}
+
+/* header */
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+.top-in{max-width:760px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:10px}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0;background:none;border:0;padding:4px 0;cursor:pointer;text-align:left;border-radius:6px}
+.totop{position:fixed;right:16px;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:7;width:56px;height:56px;border-radius:50%;border:2px solid var(--on-oxy);background:var(--oxy);color:var(--on-oxy);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.28)}
+.totop svg{width:28px;height:28px}
+.brand svg{flex:none}
+.brand b{font-family:var(--display);font-size:1.3rem;font-weight:700;white-space:nowrap}
+.hbtn{min-width:48px;height:44px;padding:0 10px;border:2px solid var(--ink);background:var(--surface);border-radius:6px;font-weight:700;cursor:pointer;white-space:nowrap;display:inline-flex;align-items:center;justify-content:center}
+.hbtn svg{width:24px;height:24px}
+input[type=text],input[type=date]{min-height:48px;padding:8px 12px;font:inherit;font-weight:600;border:2px solid var(--ink2);border-radius:6px;background:var(--bg);color:var(--ink);width:100%;max-width:100%}
+.logrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.logrow .meta{font-family:var(--mono);font-size:.95rem}
+.del{min-height:40px;padding:0 12px;border:2px solid var(--line);background:var(--surface);border-radius:6px;font-weight:700;cursor:pointer}
+.btn2{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:10px 16px;border-radius:6px;border:2px solid var(--ink);background:var(--surface);color:var(--ink);font-weight:700;cursor:pointer}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.toast{font-weight:700;color:var(--sig)}
+
+main{max-width:760px;margin:0 auto;padding:18px 16px calc(110px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:22px}
+section{display:flex;flex-direction:column;gap:12px}
+.eyebrow{font-family:var(--mono);font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--clay);font-weight:600}
+.lead{font-size:1.06rem;color:var(--ink2)}
+
+/* verdict */
+.verdict{background:var(--oxy-soft);border:2px solid var(--oxy);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.verdict h2{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:10px 18px;border-radius:6px;border:2px solid var(--oxy);background:var(--oxy);color:var(--on-oxy);font-weight:700;cursor:pointer;align-self:flex-start}
+
+/* tiles */
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+@media (min-width:600px){.tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile .big{font-family:var(--mono);font-size:1.6rem;font-weight:600;line-height:1.1}
+.upd{position:fixed;left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:30;background:var(--sig-bg);color:var(--sig);border:2px solid var(--sig);border-radius:8px;padding:12px 14px;font-weight:700;display:flex;align-items:center;gap:10px;max-width:728px;margin:0 auto;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.upd button{margin-left:auto;min-height:40px;padding:0 12px;border:2px solid var(--sig);background:var(--surface);color:var(--sig);border-radius:6px;font-weight:700;cursor:pointer}
+.plan-det{border:2px solid var(--oxy)}
+.plan-det>summary{color:var(--oxy)}
+.aid-det{border:2px solid var(--warn-line);background:var(--warn-bg)}
+.bigtag{font-family:var(--display);font-size:1.45rem;font-weight:700;text-align:center;padding:12px 16px;border-radius:0 0 8px 8px;font-variant-numeric:tabular-nums}
+.tilebtn{text-align:left;cursor:pointer;align-items:flex-start;color:var(--ink)}
+.tilebtn[aria-pressed="true"]{border:2px solid var(--oxy);background:var(--oxy-soft)}
+.tile .lbl{font-weight:600}
+
+/* badge */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.85rem;font-weight:700;white-space:nowrap}
+.b-s{background:var(--sig-bg);color:var(--sig)}
+.b-w{background:var(--weak-bg);color:var(--weak)}
+.b-n{background:var(--ns-bg);color:var(--ns)}
+
+/* facts */
+.facts{display:grid;grid-template-columns:minmax(0,9em) minmax(0,1fr);gap:8px 14px;margin:0}
+.facts dt{font-weight:700;color:var(--clay)}
+.facts dd{margin:0;min-width:0}
+@media (max-width:420px){.facts{grid-template-columns:minmax(0,1fr)}.facts dd{margin-bottom:6px}}
+
+details{background:var(--surface);border:1px solid var(--line);border-radius:8px}
+summary{cursor:pointer;padding:14px 16px;font-family:var(--display);font-weight:700;font-size:1.08rem;list-style:none;display:flex;justify-content:space-between;gap:10px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";font-family:var(--mono);font-size:1.3rem;line-height:1}
+details[open] summary::after{content:"−"}
+.det-body{padding:0 16px 16px;display:flex;flex-direction:column;gap:10px}
+
+ol.steps,ul.plain{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+ol.steps{counter-reset:s}
+ol.steps li{counter-increment:s;display:grid;grid-template-columns:2rem minmax(0,1fr);gap:10px;align-items:start}
+ol.steps li>:not(:first-child){grid-column:2}
+ol.steps li::before{content:counter(s);font-family:var(--mono);font-weight:600;width:2rem;height:2rem;border-radius:50%;background:var(--clay-soft);color:var(--clay);display:flex;align-items:center;justify-content:center}
+ul.plain li{padding-left:1.1rem;position:relative}
+ul.plain li::before{content:"";position:absolute;left:0;top:.62em;width:7px;height:7px;background:var(--clay);border-radius:1px}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.cite{font-size:.92rem;color:var(--ink2);border-top:1px solid var(--line);padding-top:12px}
+
+/* chips */
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{min-height:46px;padding:8px 14px;border:2px solid var(--line);background:var(--surface);border-radius:6px;font-weight:700;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--oxy);background:var(--oxy);color:var(--on-oxy)}
+
+/* legend + metric bars */
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;font-weight:600}
+.key{display:inline-flex;align-items:center;gap:6px}
+.sw{width:18px;height:12px;border-radius:2px;display:inline-block}
+.sw.c{background:var(--ctl)} .sw.t{background:var(--oxy)}
+.metric{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.mhead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.mname{font-weight:700;min-width:0}
+.unit{color:var(--ink2);font-weight:500;font-size:.92rem}
+.row{display:grid;grid-template-columns:5.2rem minmax(0,1fr);gap:10px;align-items:center}
+.row .who{font-weight:600;font-size:.92rem}
+.track{position:relative;height:30px;background:var(--sunk);border-radius:4px;overflow:hidden}
+.fill{height:100%;border-radius:4px}
+.fill.c{background:var(--ctl)} .fill.t{background:var(--oxy)}
+.val{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-family:var(--mono);font-weight:600;font-size:.92rem;color:var(--ink);background:var(--surface);padding:0 5px;border-radius:3px;white-space:nowrap}
+.delta{font-family:var(--mono);font-weight:600}
+.takeaway{background:var(--clay-soft);border-radius:8px;padding:12px 14px;font-weight:600}
+
+/* why */
+.eq{font-family:var(--mono);font-size:1.25rem;font-weight:600;background:var(--sunk);border-radius:6px;padding:12px;text-align:center;overflow-x:auto;white-space:nowrap}
+.range{width:100%;accent-color:var(--oxy);height:34px}
+.out{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.out .tile .big{color:var(--oxy)}
+
+/* settings box */
+.settings{background:var(--surface);border:2px solid var(--clay);border-radius:8px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.settings h3{color:var(--clay)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label,.field .flabel{font-weight:700}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+input[type=number]{width:8rem;min-height:48px;padding:8px 12px;font:inherit;font-family:var(--mono);font-weight:600;font-size:1.1rem;border:2px solid var(--ink2);border-radius:6px;background:var(--bg);color:var(--ink);-moz-appearance:textfield;appearance:textfield}
+input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.note{font-size:.95rem;color:var(--ink2)}
+.warn{background:var(--warn-bg);border-left:5px solid var(--warn-line);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:8px}
+
+/* checklist */
+.check{display:flex;flex-direction:column;gap:8px}
+.check label{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px;cursor:pointer}
+.check input{width:24px;height:24px;margin:2px 0 0;accent-color:var(--oxy)}
+.check input:checked + span{text-decoration:line-through;color:var(--ink2)}
+
+/* bottom nav */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
+.tabs-in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+.tab{background:none;border:0;padding:8px 4px 10px;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--ink2);font-weight:600;font-size:.88rem;border-top:4px solid transparent}
+.tab[aria-current="page"]{color:var(--oxy);border-top-color:var(--oxy)}
+.tab svg{width:26px;height:26px}
+
+/* language picker */
+.picker{position:fixed;inset:0;z-index:20;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.picker-in{width:100%;max-width:380px;display:flex;flex-direction:column;gap:14px;text-align:center}
+.picker .langbtn{min-height:60px;border:2px solid var(--ink);background:var(--surface);border-radius:8px;font-size:1.25rem;font-weight:700;cursor:pointer}
+.soil-art{width:100%;height:auto;max-width:100%;border-radius:8px;display:block}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+@keyframes rise{from{transform:translateY(0);opacity:.95}to{transform:translateY(-36px);opacity:0}}
+.bub{animation:rise 3.2s ease-in infinite}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <button class="brand" id="homeBtn" aria-label="Home">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect x="1" y="1" width="32" height="32" rx="7" fill="var(--clay)"/><path d="M17 6v22M17 17l-6 7M17 21l6 6" stroke="var(--clay-soft)" stroke-width="2.4" stroke-linecap="round" fill="none"/><circle cx="25" cy="10" r="3.2" fill="var(--oxy-soft)"/><circle cx="9" cy="12" r="2.2" fill="var(--oxy-soft)"/></svg>
+      <b id="appTitle">根区补氧</b>
+    </button>
+    <button class="hbtn" id="themeBtn" aria-label="Theme"></button>
+    <button class="hbtn" id="fsBtn" aria-label="Text size">Aa</button>
+    <button class="hbtn" id="langBtn">中文</button>
+  </div>
+</header>
+
+<main id="main"></main>
+
+<button class="totop" id="topBtn" aria-label="Back to top" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+
+<div class="upd" id="upd" hidden role="status"><span id="updTxt"></span><button id="updClose" aria-label="Close">✕</button></div>
+
+<nav class="tabs" aria-label="Sections">
+  <div class="tabs-in" id="tabs"></div>
+</nav>
+
+<div class="picker" id="picker" hidden>
+  <div class="picker-in">
+    <svg width="64" height="64" viewBox="0 0 34 34" aria-hidden="true" style="margin:0 auto"><rect x="1" y="1" width="32" height="32" rx="7" fill="var(--clay)"/><path d="M17 6v22M17 17l-6 7M17 21l6 6" stroke="var(--clay-soft)" stroke-width="2.4" stroke-linecap="round" fill="none"/><circle cx="25" cy="10" r="3.2" fill="var(--oxy-soft)"/><circle cx="9" cy="12" r="2.2" fill="var(--oxy-soft)"/></svg>
+    <h2>选择语言 · Choose language · Pilih bahasa</h2>
+    <button class="langbtn" data-pick="zh">中文</button>
+    <button class="langbtn" data-pick="en">English</button>
+    <button class="langbtn" data-pick="ms">Malay</button>
+  </div>
+</div>
+
+<script>
+(function(){
+const APP_VER = "v1.5.0 · 2026-10-14";
+const store = {
+  get(k,d){try{const v=localStorage.getItem("rootoxy."+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+  set(k,v){try{localStorage.setItem("rootoxy."+k,JSON.stringify(v))}catch(e){}}
+};
+const S = {
+  lang: store.get("lang", null),
+  tab: store.get("tab", "sum"),
+  fs: store.get("fs", 17),
+  grp: store.get("grp", "growth"),
+  stock: store.get("stock", 50),
+  trees: store.get("trees", 5),
+  months: store.get("months", 4),
+  r: 0.54,
+  tile: 0,
+  planOpen: store.get("planOpen", false),
+  apps: store.get("apps", 2),
+  water: store.get("water", 10),
+  theme: store.get("theme", "auto"),
+  checks: store.get("checks", {}),
+  log: store.get("log", [])
+};
+const THEME_ICON={
+  auto:'<circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/>',
+  light:'<circle cx="12" cy="12" r="4.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>',
+  dark:'<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'
+};
+function applyTheme(){const r=document.documentElement;if(S.theme==="auto")r.removeAttribute("data-theme");else r.setAttribute("data-theme",S.theme);
+  const b=document.getElementById("themeBtn");b.innerHTML=`<svg viewBox="0 0 24 24" aria-hidden="true">${THEME_ICON[S.theme]}</svg>`;
+  b.setAttribute("aria-label",t(L({auto:"主题：跟随系统",light:"主题：浅色",dark:"主题：深色"}[S.theme],{auto:"Theme: system",light:"Theme: light",dark:"Theme: dark"}[S.theme],{auto:"Tema: sistem",light:"Tema: cerah",dark:"Tema: gelap"}[S.theme])))}
+const L = (zh,en,ms)=>({zh,en,ms});
+const t = o => (o && typeof o==="object") ? (o[S.lang||"zh"] ?? o.en) : o;
+const fmt = (n,d=0)=>Number(n).toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d});
+
+/* ---------- data from Gil et al. 2009, Tables 2–5 ---------- */
+const BADGE = {
+  s:   {cls:"b-s", txt:L("显著 · P≤0.05","Clear · P≤0.05","Ketara · P≤0.05")},
+  w10: {cls:"b-w", txt:L("弱 · P≤0.1","Weak · P≤0.1","Lemah · P≤0.1")},
+  w15: {cls:"b-w", txt:L("弱 · P≤0.15","Weak · P≤0.15","Lemah · P≤0.15")},
+  n:   {cls:"b-n", txt:L("无差异","No difference","Tiada beza")}
+};
+const GROUPS = [
+ {id:"growth", name:L("生长","Growth","Pertumbuhan"),
+  take:L("地上部分（叶、枝干）明显长得更多；根没有变化。","Above-ground parts (leaves, wood) grew clearly more. Roots did not change.","Bahagian atas tanah (daun, kayu) tumbuh jelas lebih banyak. Akar tidak berubah."),
+  m:[
+   {n:L("整株干重","Whole tree dry weight","Berat kering seluruh pokok"),u:"g",c:2706.6,cs:"149.8",t:3181.9,ts:"147.1",p:"w10",d:1},
+   {n:L("枝干干重（新梢＋老枝干）","Wood dry weight (new shoots + old wood)","Berat kering kayu (pucuk baru + kayu lama)"),u:"g",c:877.32,cs:"26",t:1111.50,ts:"24",p:"s",d:1},
+   {n:L("叶片干重","Leaf dry weight","Berat kering daun"),u:"g",c:833.26,cs:"75",t:1067.48,ts:"13",p:"s",d:1},
+   {n:L("根干重","Root dry weight","Berat kering akar"),u:"g",c:996,cs:"158",t:1003,ts:"171",p:"n",d:0},
+   {n:L("总叶面积","Total leaf area","Jumlah luas daun"),u:"cm²",c:66524,cs:"8.1*",t:95185,ts:"11.8*",p:"s",d:0},
+   {n:L("用水效率（每升水产生的干物质）","Water use efficiency (dry matter per litre of water)","Kecekapan guna air (bahan kering per liter air)"),u:"g/L",c:2.41,cs:"0.1",t:2.83,ts:"0.1",p:"s",d:2}
+  ]},
+ {id:"leaf", name:L("叶片与水分","Leaves & water","Daun & air"),
+  take:L("每片叶的气孔、蒸腾、光合都没有测出差异。作者推论增长来自叶子更多，而不是每片叶更努力；全株光合作用没有测量。","No measured change per leaf in stomata, transpiration or photosynthesis. The authors infer the gain came from more leaves, not harder-working leaves; whole-tree photosynthesis was not measured.","Tiada perubahan diukur bagi setiap daun pada stomata, transpirasi atau fotosintesis. Penulis membuat inferens bahawa peningkatan datang daripada lebih banyak daun, bukan daun yang bekerja lebih kuat; fotosintesis seluruh pokok tidak diukur."),
+  m:[
+   {n:L("气孔导度（上午）","Stomatal conductance (morning)","Konduktans stomata (pagi)"),u:"cm/s",c:0.49,cs:"0.03",t:0.51,ts:"0.03",p:"n",d:2},
+   {n:L("气孔导度（下午）","Stomatal conductance (afternoon)","Konduktans stomata (petang)"),u:"cm/s",c:0.29,cs:"0.02",t:0.28,ts:"0.02",p:"n",d:2},
+   {n:L("蒸腾（上午）","Transpiration (morning)","Transpirasi (pagi)"),u:"µg/cm²/s",c:4.50,cs:"0.18",t:4.80,ts:"0.25",p:"n",d:2},
+   {n:L("蒸腾（下午）","Transpiration (afternoon)","Transpirasi (petang)"),u:"µg/cm²/s",c:5.30,cs:"0.24",t:4.80,ts:"0.22",p:"n",d:2},
+   {n:L("茎水势（上午）","Stem water potential (morning)","Potensi air batang (pagi)"),u:"kPa†",c:-0.60,cs:"0.05",t:-0.63,ts:"0.04",p:"n",d:2},
+   {n:L("茎水势（下午）","Stem water potential (afternoon)","Potensi air batang (petang)"),u:"kPa†",c:-0.92,cs:"0.04",t:-0.88,ts:"0.04",p:"n",d:2},
+   {n:L("净光合速率（每单位叶面积）","Net photosynthesis (per leaf area)","Fotosintesis bersih (per luas daun)"),u:"µmol/m²/s",c:4.86,cs:"0.48",t:5.38,ts:"0.58",p:"n",d:2}
+  ]},
+ {id:"soil", name:L("土壤空气","Soil air","Udara tanah"),
+  take:L("加双氧水后土壤氧气和氧扩散率略高，但不显著。土壤空气只在 2 个日期取样，氧扩散率只在 3 个日期测量，没有连续监测，所以补氧的强度和持续时间仍未确认。","With H₂O₂, soil oxygen and oxygen diffusion rate were slightly higher, but not significantly. Soil air was sampled on only 2 dates and diffusion rate on 3, with no continuous monitoring, so how much oxygen was added and for how long is still unknown.","Dengan H₂O₂, oksigen tanah dan kadar resapan oksigen sedikit lebih tinggi, tetapi tidak ketara. Udara tanah hanya disampel pada 2 tarikh dan kadar resapan pada 3 tarikh, tanpa pemantauan berterusan, jadi berapa banyak oksigen ditambah dan berapa lama masih tidak diketahui."),
+  m:[
+   {n:L("氧扩散率 ODR（15 cm 深）","Oxygen diffusion rate, ODR (15 cm deep)","Kadar resapan oksigen, ODR (15 cm dalam)"),u:"µg/cm²/min",c:0.34,cs:"0.03",t:0.39,ts:"0.04",p:"n",d:2},
+   {n:L("土壤空气中的氧气（30 cm 深）","Oxygen in soil air (30 cm deep)","Oksigen dalam udara tanah (30 cm dalam)"),u:"%",c:4.97,cs:"0.23",t:5.16,ts:"0.12",p:"n",d:2},
+   {n:L("土壤空气中的二氧化碳（30 cm 深）","Carbon dioxide in soil air (30 cm deep)","Karbon dioksida dalam udara tanah (30 cm dalam)"),u:"%",c:0.39,cs:"0.09",t:0.40,ts:"0.05",p:"n",d:2}
+  ]},
+ {id:"anat", name:L("维管结构","Vessel anatomy","Anatomi vaskular"),
+  take:L("新梢的木质部/韧皮部比例较高（弱）；根的导管稍大稍多，但不显著。","New shoots had more xylem relative to phloem (weak). Root vessels were slightly bigger and more numerous, but not significantly.","Pucuk baru mempunyai lebih banyak xilem berbanding floem (lemah). Salur akar sedikit lebih besar dan lebih banyak, tetapi tidak ketara."),
+  m:[
+   {n:L("春梢 木质部/韧皮部 比例","Spring shoot xylem / phloem ratio","Nisbah xilem / floem pucuk musim bunga"),u:"",c:1.5,t:2.0,p:"w15",d:1},
+   {n:L("根 木质部/韧皮部 比例","Root xylem / phloem ratio","Nisbah xilem / floem akar"),u:"",c:1.5,t:1.4,p:"n",d:1},
+   {n:L("每条根的导管数","Xylem vessels per root","Bilangan salur xilem per akar"),u:"",c:59.8,t:63.6,p:"n",d:1},
+   {n:L("平均导管面积","Mean vessel area","Purata luas salur"),u:"µm²",c:2392.5,t:2418.4,p:"n",d:1},
+   {n:L("木质部总面积","Total xylem area","Jumlah luas xilem"),u:"µm²",c:146630,t:154202,p:"n",d:0}
+  ]}
+];
+
+/* ---------- UI strings ---------- */
+const T = {
+ title:L("根区补氧","RootOxy","RootOxy"),
+ tabs:[
+  {id:"sum", n:L("主页","Home","Utama"), i:'<path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.5 10v10h13V10" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M10 20v-6h4v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>'},
+  {id:"res", n:L("结果","Results","Keputusan"), i:'<path d="M4 21h17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><rect x="5" y="12" width="4" height="8" fill="none" stroke="currentColor" stroke-width="2"/><rect x="11" y="6" width="4" height="14" fill="none" stroke="currentColor" stroke-width="2"/><rect x="17" y="9" width="3" height="11" fill="none" stroke="currentColor" stroke-width="2"/>'},
+  {id:"why", n:L("原理","Why","Sebab"), i:'<path d="M12 3v8M12 11l-5 9M12 11l5 9M12 15l-2 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="5" r="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="6" cy="6" r="1.6" fill="none" stroke="currentColor" stroke-width="2"/>'},
+  {id:"farm", n:L("果园","Orchard","Kebun"), i:'<circle cx="12" cy="9" r="6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 15v6M3 21h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'}
+,
+  {id:"aid", n:L("急救","First aid","Cemas"), i:'<rect x="4" y="5" width="16" height="15" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 9v7M8.5 12.5h7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/><path d="M9 5V3h6v2" fill="none" stroke="currentColor" stroke-width="2"/>'}
+ ],
+ ctl:L("对照","Control","Kawalan"),
+ trt:L("双氧水","H₂O₂","H₂O₂"),
+ sePrinted:L("± 为论文印出的标准误。","± is the standard error as printed in the paper.","± ialah ralat piawai seperti dicetak dalam kertas kajian.")
+};
+
+function badge(p){const b=BADGE[p];return `<span class="badge ${b.cls}">${t(b.txt)}</span>`}
+function pct(c,v){return (v-c)/Math.abs(c)*100}
+function sign(n,d=0){return (n>0?"+":n<0?"−":"")+fmt(Math.abs(n),d)}
+function getM(g,i){return GROUPS.find(x=>x.id===g).m[i]}
+
+/* ---------- views ---------- */
+function soilArt(){
+  return `<svg class="soil-art" viewBox="0 0 680 150" role="img" aria-label="${t(L("黏土中的根与氧气泡","Root in wet clay with oxygen bubbles","Akar dalam tanah liat basah dengan gelembung oksigen"))}">
+   <rect x="0" y="0" width="680" height="150" fill="var(--clay-soft)"/>
+   <rect x="0" y="0" width="680" height="34" fill="var(--sunk)"/>
+   ${Array.from({length:46},(_,i)=>{const x=(i*53)%680+8,y=44+((i*37)%96);const w=(i%3===0)?"var(--oxy-soft)":"var(--surface)";return `<ellipse cx="${x}" cy="${y}" rx="${6+(i%4)*2}" ry="${3+(i%3)}" fill="${w}" opacity=".9"/>`}).join("")}
+   <path d="M340 34 C338 70 330 96 300 140 M336 78 C360 100 392 112 420 140 M332 96 C310 112 268 120 240 132" fill="none" stroke="var(--clay)" stroke-width="7" stroke-linecap="round"/>
+   <path d="M340 34 C338 70 330 96 300 140 M336 78 C360 100 392 112 420 140 M332 96 C310 112 268 120 240 132" fill="none" stroke="var(--clay-soft)" stroke-width="2" stroke-linecap="round" opacity=".6"/>
+   ${[[316,128,0],[372,112,.6],[288,124,1.2],[400,130,1.8],[350,100,2.4],[262,130,.9]].map(([x,y,dl])=>`<circle class="bub" style="animation-delay:${dl}s" cx="${x}" cy="${y}" r="6" fill="none" stroke="var(--oxy)" stroke-width="2.5"/>`).join("")}
+   <text x="16" y="23" font-family="IBM Plex Mono,monospace" font-size="15" font-weight="600" fill="var(--ink2)">O₂ ↓  ${t(L("黏土 · 田间持水量","heavy clay loam · field capacity","tanah liat berat · kapasiti ladang"))}</text>
+  </svg>`;
+}
+
+/* ---------- illustrations (inline SVG, theme tokens, labels follow the app language) ---------- */
+const F='font-family:var(--body);font-weight:700';
+function tree(x,y,s,leafy,trunk,canopyCol){ // simple avocado tree: trunk + canopy blobs; leafy=1 normal, >1 bigger canopy; trunk=stroke multiplier
+  const r=28*s*leafy, tw=7*s*(trunk||1), col=canopyCol||'var(--sig)';
+  return `<g transform="translate(${x},${y})">
+   <path d="M0 0v-${60*s}" stroke="var(--clay)" stroke-width="${tw}" stroke-linecap="round" fill="none"/>
+   <path d="M0 -${34*s}l-${16*s} -${18*s}M0 -${44*s}l${16*s} -${16*s}" stroke="var(--clay)" stroke-width="${tw*.7}" stroke-linecap="round" fill="none"/>
+   <circle cx="0" cy="-${70*s}" r="${r}" fill="${col}"/><circle cx="-${r*.8}" cy="-${55*s}" r="${r*.8}" fill="${col}"/><circle cx="${r*.8}" cy="-${55*s}" r="${r*.8}" fill="${col}"/><circle cx="0" cy="-${70*s+r*.6}" r="${r*.7}" fill="${col}"/>
+  </g>`;
+}
+function roots(x,y,s,col){return `<path transform="translate(${x},${y}) scale(${s})" d="M0 0c-2 20-8 36-24 60M0 10c10 18 24 30 40 48M0 22c-14 14-30 20-50 28M0 30c8 14 10 28 12 44" fill="none" stroke="${col||'var(--clay)'}" stroke-width="5" stroke-linecap="round"/>`}
+function bubbles(pts,col){return pts.map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${col||'var(--oxy)'}" stroke-width="2.5"/>`).join("")}
+function illoWet(){ // wet clay vs drained mound
+  const lab=L(["积水黏土","根缺氧、发黑","土墩 / 高畦","空气进得去，根白又多"],["Waterlogged clay","Roots starve, turn black","Mound / raised bed","Air gets in; roots white and many"],["Tanah liat bertakung","Akar lemas, menghitam","Batas / permatang tinggi","Udara masuk; akar putih dan banyak"]);
+  const l=t(lab);
+  return `<svg viewBox="0 0 680 300" style="width:100%;height:auto;display:block" role="img" aria-label="${l[0]} / ${l[2]}">
+   <rect width="680" height="300" fill="var(--surface)" rx="8"/>
+   <!-- left: waterlogged -->
+   <rect x="20" y="150" width="300" height="130" fill="var(--clay-soft)" rx="6"/>
+   <rect x="20" y="150" width="300" height="130" fill="var(--oxy-soft)" opacity=".7" rx="6"/>
+   <path d="M20 150q20-8 40 0t40 0 40 0 40 0 40 0 40 0 40 0 20 0" fill="none" stroke="var(--oxy)" stroke-width="3"/>
+   ${tree(170,150,1,0.8)}
+   ${roots(170,150,1,'var(--ink)')}
+   <path d="M60 230h20M250 200h22" stroke="var(--ink)" stroke-width="2"/>
+   <text x="170" y="40" text-anchor="middle" font-size="19" fill="var(--ink)" style="${F}">${l[0]}</text>
+   <text x="170" y="296" text-anchor="middle" font-size="15" fill="var(--weak)" style="${F}">${l[1]}</text>
+   <text x="40" y="178" font-size="22" fill="var(--weak)" style="${F}">✕ O₂</text>
+   <!-- right: mound -->
+   <rect x="360" y="190" width="300" height="90" fill="var(--clay-soft)" rx="6"/>
+   <path d="M380 190q130-90 260 0z" fill="var(--clay-soft)"/>
+   ${bubbles([[430,215,5],[470,250,6],[560,230,5],[600,260,6],[500,200,4],[620,205,4]],'var(--oxy)')}
+   ${tree(510,146,1,1.25)}
+   ${roots(510,146,1.15,'var(--surface)')}
+   ${roots(510,146,1.15,'var(--clay)')}
+   <path d="M330 150h20l-6-6m6 6-6 6" fill="none" stroke="var(--oxy)" stroke-width="3" stroke-linecap="round"/>
+   <path d="M350 215h-20m0 0l6-6m-6 6 6 6" fill="none" stroke="var(--oxy)" stroke-width="3" stroke-linecap="round" transform="translate(300 0)"/>
+   <text x="510" y="40" text-anchor="middle" font-size="19" fill="var(--ink)" style="${F}">${l[2]}</text>
+   <text x="510" y="296" text-anchor="middle" font-size="15" fill="var(--sig)" style="${F}">${l[3]}</text>
+   <text x="380" y="178" font-size="22" fill="var(--oxy)" style="${F}">✓ O₂</text>
+  </svg>`;
+}
+function illoReact(){ // H2O2 -> water + oxygen
+  const l=t(L(["双氧水","水","氧气","到了土里"],["Hydrogen peroxide","Water","Oxygen","in the soil"],["Hidrogen peroksida","Air","Oksigen","dalam tanah"]));
+  const bottle=(x,y,lab,fill)=>`<g transform="translate(${x},${y})"><rect x="-26" y="-10" width="52" height="90" rx="8" fill="${fill}" stroke="var(--ink)" stroke-width="2.5"/><rect x="-12" y="-28" width="24" height="20" rx="3" fill="var(--ink)"/><text x="0" y="110" text-anchor="middle" font-size="15" fill="var(--ink)" style="${F}">${lab}</text></g>`;
+  return `<svg viewBox="0 0 680 220" style="width:100%;height:auto;display:block" role="img" aria-label="2 H₂O₂ → 2 H₂O + O₂">
+   <rect width="680" height="220" fill="var(--surface)" rx="8"/>
+   ${bottle(90,50,l[0],'var(--oxy-soft)')}
+   <text x="90" y="52" text-anchor="middle" font-size="22" fill="var(--ink)" style="${F}">H₂O₂</text>
+   <text x="180" y="78" text-anchor="middle" font-size="26" fill="var(--ink)" style="${F}">→</text>
+   <text x="180" y="110" text-anchor="middle" font-size="14" fill="var(--ink2)" style="${F}">${l[3]}</text>
+   ${bottle(270,50,l[1],'var(--sunk)')}
+   <text x="270" y="52" text-anchor="middle" font-size="22" fill="var(--ink)" style="${F}">H₂O</text>
+   <text x="340" y="78" text-anchor="middle" font-size="26" fill="var(--ink)" style="${F}">+</text>
+   <g transform="translate(440,60)">${bubbles([[0,0,22],[50,-18,14],[80,22,18],[30,34,10],[110,-6,10]],'var(--oxy)')}<text x="0" y="8" text-anchor="middle" font-size="18" fill="var(--oxy)" style="${F}">O₂</text><text x="80" y="29" text-anchor="middle" font-size="15" fill="var(--oxy)" style="${F}">O₂</text><text x="55" y="110" text-anchor="middle" font-size="15" fill="var(--ink)" style="${F}">${l[2]}</text></g>
+   <path d="M560 40c40 0 60 20 60 60s-20 60-60 60" fill="none" stroke="var(--line)" stroke-width="2"/>
+   ${roots(620,110,0.8)}
+  </svg>`;
+}
+/* which tile is selected on the home screen → what the pots drawing emphasises */
+const TILES=[
+ {k:"leaf", g:"growth",i:4, lab:L("叶面积","Leaf area","Luas daun")},
+ {k:"leafw",g:"growth",i:2, lab:L("叶片干重","Leaf weight","Berat daun")},
+ {k:"wood", g:"growth",i:1, lab:L("枝干干重","Wood weight","Berat kayu")},
+ {k:"wue",  g:"growth",i:5, lab:L("用水效率","Water use efficiency","Kecekapan guna air")},
+ {k:"whole",g:"growth",i:0, lab:L("整株干重","Whole tree","Seluruh pokok")},
+ {k:"root", g:"growth",i:3, lab:L("根干重","Roots","Akar")}
+];
+function illoPots(){ // control vs H2O2 result; S.tile picks the emphasis
+  const tile=TILES[S.tile]||TILES[0], m=getM(tile.g,tile.i), d=pct(m.c,m.t);
+  const l=t(L(["不加双氧水","加双氧水","根：一样","每升水长出更多树","每棵用水一样多"],["Without H₂O₂","With H₂O₂","Roots: the same","More tree per litre of water","Same water per tree"],["Tanpa H₂O₂","Dengan H₂O₂","Akar: sama","Lebih pokok setiap liter air","Air sama setiap pokok"]));
+  const k=tile.k;
+  const dim='var(--line)';
+  // every drawn size comes from the paper's own ratio, so the picture never says more than the number does:
+  // an area or weight ratio R is drawn as a linear scale of sqrt(R) (area grows with the square of the radius)
+  const ratio=(g,i)=>{const mm=getM(g,i);return mm.t/mm.c};
+  const R={leaf:ratio("growth",4),leafw:ratio("growth",2),wood:ratio("growth",1),wue:ratio("growth",5),whole:ratio("growth",0),root:ratio("growth",3)};
+  const lin=r=>Math.sqrt(r);
+  const base={leafy:1,trunk:1,canopy:'var(--sig)',root:'var(--clay)',rootScale:1};
+  const ctl={...base}, trt={...base};
+  if(k==="leaf"||k==="leafw"){trt.leafy=lin(R[k]);ctl.root=trt.root=dim}
+  if(k==="wood"){ctl.canopy=trt.canopy=dim;ctl.root=trt.root=dim;trt.trunk=R.wood}          // width is linear with cross-section weight at the same height: drawn as the ratio itself
+  if(k==="whole"){trt.leafy=lin(R.whole);trt.trunk=lin(R.whole)}
+  if(k==="root"){ctl.canopy=trt.canopy=dim;ctl.root=trt.root='var(--oxy)';trt.rootScale=lin(R.root)}
+  if(k==="wue"){ctl.root=trt.root=dim;trt.leafy=lin(R.wue);trt.trunk=lin(R.wue)}
+  const drops=(x)=>`<g transform="translate(${x},0)">${[-60,-20,20,60].map(dx=>`<path d="M${dx} 312q-11-14 0-28q11 14 0 28z" fill="var(--oxy)"/>`).join("")}</g>`;
+  const pot=(x,lab,o)=>`<g transform="translate(${x},0)">
+   <path d="M-90 170h180v110h-180z" fill="var(--clay-soft)"/>
+   <path d="M-90 170h180M-90 170v110M90 170v110M-90 280h180" stroke="var(--line)" stroke-width="3" fill="none"/>
+   ${Array.from({length:6},(_,i)=>`<line x1="${-90+i*36}" y1="170" x2="${-90+i*36}" y2="280" stroke="var(--line)" stroke-width="1" opacity=".6"/>`).join("")}
+   ${tree(0,170,1.1,o.leafy,o.trunk,o.canopy)}
+   ${roots(0,172,1.1*o.rootScale,o.root)}
+   <text x="0" y="36" text-anchor="middle" font-size="32" fill="var(--ink)" style="${F}">${lab}</text>
+  </g>`;
+  const tagTxt=`${t(tile.lab)} ${sign(d)}%`;
+  const tagCol=m.p==="n"?"var(--ns)":m.p==="s"?"var(--sig)":"var(--weak)";
+  const tagBg=m.p==="n"?"var(--ns-bg)":m.p==="s"?"var(--sig-bg)":"var(--weak-bg)";
+  const cap = t(k==="root"
+    ? L("根的重量两组一样（差 1%，无差异）。","Root weight was the same in both groups (1% apart, no difference).","Berat akar sama dalam kedua-dua kumpulan (beza 1%, tiada beza).")
+    : k==="wue" ? L("每棵用水一样多，但双氧水组每升水长出更多树。","Same water per tree, but the H₂O₂ trees grew more tree per litre of water.","Air sama setiap pokok, tetapi pokok H₂O₂ tumbuh lebih banyak bagi setiap liter air.")
+    : L("地上部分变大，根的重量两组一样。","Above-ground parts grew; root weight stayed the same in both groups.","Bahagian atas tumbuh; berat akar kekal sama dalam kedua-dua kumpulan."));
+  return `<svg viewBox="0 0 680 320" style="width:100%;height:auto;display:block" role="img" aria-label="${l[0]} / ${l[1]}: ${tagTxt}">
+   <rect width="680" height="320" fill="var(--surface)" rx="8 8 0 0"/>
+   ${pot(170,l[0],ctl)}${pot(510,l[1],trt)}
+   ${k==="wue"?drops(170)+drops(510):""}
+  </svg>
+  <div class="bigtag" style="background:${tagBg};color:${tagCol}">${tagTxt}</div>
+  <p class="takeaway" style="margin-top:8px">${cap} ${t(L("图中大小按论文数字等比画出。","Sizes in the drawing follow the paper's numbers.","Saiz dalam lukisan mengikut angka kertas."))}</p>`;
+}
+function illoApply(c){ // how to apply: pictures only; the words are HTML below so they follow the text size
+  const bucket=(x,y,fill)=>`<g transform="translate(${x},${y})"><path d="M-40 0l8 80h64l8-80z" fill="var(--sunk)" stroke="var(--ink)" stroke-width="3"/><path d="M-32 30l5 50h54l5-50z" fill="${fill}"/><path d="M-40 0q40-30 80 0" fill="none" stroke="var(--ink)" stroke-width="3"/></g>`;
+  const num=(x,n)=>`<circle cx="${x}" cy="178" r="22" fill="var(--clay-soft)"/><text x="${x}" y="188" text-anchor="middle" font-size="28" fill="var(--clay)" style="${F}">${n}</text>`;
+  return `<svg viewBox="0 0 680 210" style="width:100%;height:auto;display:block" role="img" aria-label="${t(L("先放水，量双氧水倒进水里，淋在滴水线附近","Water first, measure the peroxide into the water, pour around the drip line","Air dahulu, sukat peroksida ke dalam air, siram di sekeliling garis titisan"))}">
+   <rect width="680" height="210" fill="var(--surface)" rx="8"/>
+   ${bucket(115,50,'var(--oxy-soft)')}
+   <path d="M60 30q12-36 36-12" fill="none" stroke="var(--oxy)" stroke-width="5" stroke-linecap="round"/>
+   ${num(115,1)}
+   ${bucket(340,50,'var(--oxy-soft)')}
+   <g transform="translate(340,-6)"><rect x="-14" y="0" width="28" height="48" rx="4" fill="var(--oxy)" stroke="var(--ink)" stroke-width="2.5"/></g>
+   <path d="M360 44q12 12 2 28" fill="none" stroke="var(--oxy)" stroke-width="5" stroke-linecap="round"/>
+   ${num(340,2)}
+   <g transform="translate(565,80)">
+    <circle cx="0" cy="0" r="66" fill="none" stroke="var(--oxy)" stroke-width="6" stroke-dasharray="12 8"/>
+    <circle cx="0" cy="0" r="50" fill="var(--sig)" opacity=".85"/>
+    <circle cx="0" cy="0" r="10" fill="var(--clay)"/>
+    <path d="M-66 0h-18M66 0h18" stroke="var(--oxy)" stroke-width="6" stroke-linecap="round"/>
+   </g>
+   ${num(565,3)}
+  </svg>
+  <ol class="steps" style="margin-top:10px">
+   <li><span>${t(L(`先放水 <b class="num">${fmt(c.water,1)} 升</b>。`,`Water first: <b class="num">${fmt(c.water,1)} L</b>.`,`Air dahulu: <b class="num">${fmt(c.water,1)} L</b>.`))}</span></li>
+   <li><span>${t(L(`量 <b class="num">${fmt(c.perApp,1)} mL</b> 双氧水，倒进水里。`,`Measure <b class="num">${fmt(c.perApp,1)} mL</b> of H₂O₂ and pour it into the water.`,`Sukat <b class="num">${fmt(c.perApp,1)} mL</b> H₂O₂ dan tuang ke dalam air.`))}</span></li>
+   <li>${t(L("淋在树冠外缘的滴水线附近（虚线圈），不要倒在树头。","Pour around the drip line at the edge of the canopy (the dotted circle), not at the trunk.","Siram di sekeliling garis titisan di pinggir kanopi (bulatan putus-putus), bukan di pangkal pokok."))}</li>
+  </ol>`;
+}
+
+const DOSE_WORK=L("用量的两个数字互相矛盾。论文写浓度为「1 mg kg⁻¹（即 1 ppm）的 50% 双氧水」，又写整季每棵约 700 mL。用论文自己的用水效率反推，每棵整季只用了约 1,124 升水；700 mL 的 50% 双氧水（约 419 g）溶在这些水里，平均约 370 mg/L，若只在最后 10% 的灌溉时间注入，约 3,700 mg/L（0.37%），都远高于 1 ppm。论文没有说明哪个数字正确。","The two dose figures contradict each other. The paper gives the strength as \"1 mg kg⁻¹ (i.e. 1 ppm) of 50% H₂O₂\" and also says about 700 mL per tree for the season. Working back from the paper's own water use efficiency, each tree received only about 1,124 L of water all season. 700 mL of 50% H₂O₂ (about 419 g) in that water averages about 370 mg/L, or about 3,700 mg/L (0.37%) if injected only in the last 10% of each irrigation. Both are far above 1 ppm. The paper does not say which figure is right.","Dua angka dos bercanggah. Kertas menyatakan kekuatan \"1 mg kg⁻¹ (iaitu 1 ppm) H₂O₂ 50%\" dan juga kira-kira 700 mL setiap pokok untuk satu musim. Dikira semula daripada kecekapan guna air kertas itu sendiri, setiap pokok hanya menerima kira-kira 1,124 L air sepanjang musim. 700 mL H₂O₂ 50% (kira-kira 419 g) dalam air itu purata kira-kira 370 mg/L, atau kira-kira 3,700 mg/L (0.37%) jika disuntik hanya pada 10% terakhir setiap pengairan. Kedua-duanya jauh melebihi 1 ppm. Kertas tidak menyatakan angka mana yang betul.");
+
+function sourcesBody(){
+  return `
+   <p class="note">${t(L("本软件的每个数字都来自下面第一篇论文。链接会在浏览器打开；论文是英文的，可以免费下载。","Every number in this app comes from the first paper below. Links open in your browser; the paper is in English and free to download.","Setiap angka dalam aplikasi ini datang daripada kertas pertama di bawah. Pautan dibuka dalam pelayar; kertas itu dalam bahasa Inggeris dan percuma dimuat turun."))}</p>
+   ${[
+    {h:L("原始论文（同行评审）","The original paper (peer-reviewed)","Kertas asal (semakan rakan sebaya)"),
+     p:"Gil P.M., Ferreyra R., Barrera C., Zúñiga C., Gurovich L. (2009). Effect of injecting hydrogen peroxide into heavy clay loam soil on plant water status, net CO₂ assimilation, biomass, and vascular anatomy of avocado trees. <i>Chilean Journal of Agricultural Research</i> 69(1): 97–106.",
+     links:[["DOI 10.4067/S0718-58392009000100012","https://doi.org/10.4067/S0718-58392009000100012"],[L("期刊 PDF","Journal PDF","PDF jurnal"),"https://oes.chileanjar.cl/files/V69_I1_2009_ENG_PilarMGilM.pdf"],[L("期刊库记录","Repository record","Rekod repositori"),"https://revistaschilenas.uchile.cl/handle/2250/55434"]]},
+    {h:L("同一试验的博士论文版本","Earlier PhD-thesis version of the same trial","Versi tesis PhD bagi ujian yang sama"),
+     p:L("第一作者 Pilar Gil 在智利天主教大学的博士论文第 4 章；日期和用量写法与期刊版略有不同，本软件用它核对了印错的日期。","Chapter 4 of first author Pilar Gil's PhD thesis at Pontificia Universidad Católica de Chile; dates and dose wording differ slightly from the journal version, and the app used it to check the misprinted date.","Bab 4 tesis PhD penulis pertama Pilar Gil di Pontificia Universidad Católica de Chile; tarikh dan ungkapan dos sedikit berbeza daripada versi jurnal, dan aplikasi ini menggunakannya untuk menyemak tarikh yang tersalah cetak."),
+     links:[["AvocadoSource PDF","https://www.avocadosource.com/papers/Chile_Papers_A-Z/G-H-I/GilPilar2008/GilPilar2008_Chapter4.pdf"]]},
+    {h:L("作者","The author","Penulis"),
+     p:L("Pilar Gil Montenegro 现任智利天主教大学农学院教师。用量的矛盾只有她能解答。","Pilar Gil Montenegro is now on the faculty of agronomy at Pontificia Universidad Católica de Chile. Only she can settle the dose contradiction.","Pilar Gil Montenegro kini pensyarah di fakulti agronomi Pontificia Universidad Católica de Chile. Hanya dia boleh menyelesaikan percanggahan dos."),
+     links:[[L("教师网页","Faculty page","Laman fakulti"),"https://agronomia.uc.cl/Pilar-Gil-Montenegro"]]},
+    {h:L("安全资料","Safety information","Maklumat keselamatan"),
+     p:L("马来西亚国家毒物中心（理科大学）。急救页的电话和时间来自这里。","National Poison Centre of Malaysia (USM). The phone number and hours on the first-aid page come from here.","Pusat Racun Negara Malaysia (USM). Nombor telefon dan waktu pada halaman pertolongan cemas datang dari sini."),
+     links:[["prn.usm.my","https://prn.usm.my/"]]}
+   ].map(s=>`<div style="display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:10px">
+     <h3>${t(s.h)}</h3><p>${t(s.p)}</p>
+     <div class="seg">${s.links.map(([lab,url])=>`<a class="btn2" href="${url}" target="_blank" rel="noopener" style="text-decoration:none;word-break:break-all">${t(lab)} ↗</a>`).join("")}</div>
+    </div>`).join("")}
+  `;
+}
+
+function viewSum(){
+  const tiles=TILES.map((x,idx)=>{const m=getM(x.g,x.i);const d=pct(m.c,m.t);return `<button class="tile tilebtn" data-tile="${idx}" aria-pressed="${idx===S.tile}"><span class="big">${sign(d)}%</span><span class="lbl">${t(x.lab)}</span>${badge(m.p)}</button>`}).join("");
+
+  const facts=[
+   [L("作物","Crop","Tanaman"),L("3 年生 Hass 鳄梨，嫁接在 Mexícola 实生砧木上","3-year-old 'Hass' avocado grafted on 'Mexícola' seedling rootstock","Avokado 'Hass' berumur 3 tahun, dicantum pada pokok penanti benih 'Mexícola'")],
+   [L("盆栽","Pots","Pasu"),L("200 升容器：用白色塑料网和铁线架围住土团；重黏壤土，水分保持在田间持水量附近","200 L containers made of white plastic mesh on a metal-wire frame around the soil; heavy clay loam, kept near field capacity","Bekas 200 L daripada jaring plastik putih pada rangka dawai logam di sekeliling tanah; tanah liat lom berat, dikekalkan hampir kapasiti ladang")],
+   [L("设计","Design","Reka bentuk"),L("完全随机设计","Completely randomised design","Reka bentuk rawak lengkap")],
+   [L("地点与时间","Place & time","Tempat & masa"),L("智利 INIA La Cruz · 2006 年 11 月至 2007 年 3 月（春夏季，约 4 个月）","INIA La Cruz, Chile · Nov 2006 – Mar 2007 (spring–summer, about 4 months)","INIA La Cruz, Chile · Nov 2006 – Mac 2007 (musim bunga–panas, kira-kira 4 bulan)")],
+   [L("样本","Trees","Pokok"),L("处理 5 棵，对照 5 棵","5 treated, 5 control","5 dirawat, 5 kawalan")],
+   [L("处理方法","Treatment","Rawatan"),L("稀释双氧水经埋深 3 cm 的滴头注入，放在每次灌溉最后 10% 的时间","Diluted H₂O₂ injected through drippers buried 3 cm deep, during the last 10% of every irrigation","H₂O₂ cair disuntik melalui penitis yang ditanam 3 cm dalam, pada 10% terakhir setiap pengairan")],
+   [L("用量","Amount","Jumlah"),L("整季每棵约 700 mL 的 50% 双氧水","About 700 mL of 50% H₂O₂ per tree for the whole season","Kira-kira 700 mL H₂O₂ 50% bagi setiap pokok untuk satu musim")],
+   [L("灌溉","Irrigation","Pengairan"),L("每棵 16 个滴头 × 0.5 L/h，每天 2–4 次","16 drippers × 0.5 L/h per tree, 2–4 times a day","16 penitis × 0.5 L/j bagi setiap pokok, 2–4 kali sehari")],
+   [L("病害控制","Disease control","Kawalan penyakit"),L("土壤蒸汽消毒，并用甲霜灵和三乙膦酸铝排除疫霉","Soil steam-sterilised; metalaxyl and fosetyl-Al used to keep Phytophthora out","Tanah disteril wap; metalaksil dan fosetil-Al digunakan untuk menghalang Phytophthora")]
+  ].map(([a,b])=>`<dt>${t(a)}</dt><dd>${t(b)}</dd>`).join("");
+
+  const limits=[
+   L("这是盆栽试验，不是果园。作者自己说还需要在果园规模测试可行性和成本。","Pots, not an orchard. The authors say orchard-scale tests of practicality and cost are still needed.","Pasu, bukan kebun. Penulis menyatakan ujian skala kebun tentang kepraktisan dan kos masih diperlukan."),
+   L("每组只有 5 棵树，只做了一季。","Only 5 trees per group, for one season.","Hanya 5 pokok setiap kumpulan, untuk satu musim."),
+   L("土壤氧气（2 个日期）和氧扩散率（3 个日期）都没有显著差异。生长增加是观察结果；「补氧促进生长」仍是待验证的解释。","Soil oxygen (2 dates) and diffusion rate (3 dates) did not differ significantly. The extra growth was observed; that oxygen caused it is still an untested explanation.","Oksigen tanah (2 tarikh) dan kadar resapan (3 tarikh) tidak berbeza dengan ketara. Pertumbuhan tambahan diperhatikan; bahawa oksigen menyebabkannya masih penjelasan yang belum diuji."),
+   L("只试了一种用量，所以不知道最佳用量。","Only one dose was tested, so the best dose is unknown.","Hanya satu dos diuji, jadi dos terbaik tidak diketahui."),
+   L("没有评估果实产量和移植后的表现，也没有证明能永久改善土壤孔隙或排水。","Fruit yield and performance after transplanting were not assessed, and nothing shows a lasting improvement in soil pores or drainage.","Hasil buah dan prestasi selepas pemindahan tidak dinilai, dan tiada bukti penambahbaikan kekal pada liang tanah atau saliran."),
+   L("根重是估算的：取样测根密度，再乘以盆内土壤体积，不是把全部根称重。","Root weight was estimated: root density from a sample core multiplied by the pot's soil volume, not by weighing all the roots.","Berat akar dianggarkan: ketumpatan akar daripada sampel teras didarab dengan isi padu tanah pasu, bukan dengan menimbang semua akar."),
+   L("论文的土壤先用蒸汽消毒过，所以论文没有说明双氧水对土壤里的益生菌有什么影响。浓的双氧水本来就是消毒剂，会连好菌一起杀；它在土里分解得很快，不会残留，但施用当下的浓度要低。","The paper's soil was steam-sterilised first, so it says nothing about what H₂O₂ does to beneficial soil microbes. Strong H₂O₂ is a disinfectant and kills good microbes too; it breaks down quickly and leaves no residue, but the strength at the moment of application must be low.","Tanah kertas disteril wap dahulu, jadi ia tidak menyatakan kesan H₂O₂ terhadap mikrob berfaedah dalam tanah. H₂O₂ pekat ialah pembasmi kuman dan membunuh mikrob baik juga; ia terurai cepat tanpa sisa, tetapi kekuatannya semasa digunakan mesti rendah."),
+   L("只试了液体双氧水；过氧化钙、过氧化镁等产品没有测试。","Only liquid H₂O₂ was tested; calcium peroxide or magnesium peroxide products were not.","Hanya H₂O₂ cecair diuji; produk kalsium peroksida atau magnesium peroksida tidak diuji."),
+   L("氧扩散率始终没有低于鳄梨根受伤的临界值（0.17 µg/cm²/min），说明盆土虽湿，但缺氧并不严重。","The diffusion rate never fell below the avocado root-damage limit (0.17 µg/cm²/min), so the pots were wet but not badly starved of oxygen.","Kadar resapan tidak pernah jatuh di bawah had kerosakan akar avokado (0.17 µg/cm²/min), jadi pasu basah tetapi tidak teruk kekurangan oksigen."),
+   L("试验用杀菌剂排除了疫霉；真正积水的果园里疫霉一定在。","Phytophthora was kept out with fungicides. In a real waterlogged orchard it will be there.","Phytophthora dihalang dengan racun kulat. Di kebun yang benar-benar bertakung air, ia pasti ada."),
+   L("这是鳄梨，不是榴莲。两者都怕积水，但本文没有任何榴莲数据。","Avocado, not durian. Both are flood-sensitive, but this paper has no durian data.","Avokado, bukan durian. Kedua-duanya sensitif kepada banjir, tetapi kertas ini tiada data durian.")
+  ].map(x=>`<li>${t(x)}</li>`).join("");
+
+  const quirks=[
+   L("茎水势单位印为 kPa（如 −0.60）；这个大小的数值通常是 MPa。本软件照原文显示。","Stem water potential is labelled kPa (e.g. −0.60); values of this size are normally MPa. Shown as printed.","Potensi air batang dilabel kPa (cth. −0.60); nilai sebesar ini biasanya MPa. Dipaparkan seperti dicetak."),
+   L("田间持水量印为 −0.33 kPa；通常应为 −33 kPa。","Field capacity is printed as −0.33 kPa; it is usually −33 kPa.","Kapasiti ladang dicetak −0.33 kPa; biasanya −33 kPa."),
+   L("表 5 脚注写「* (P > 0.15)」，正文写春梢比例差异 P ≤ 0.15。本软件按正文。","Table 5's footnote says \"* (P > 0.15)\"; the text says the shoot-ratio difference was P ≤ 0.15. The app follows the text.","Nota kaki Jadual 5 menulis \"* (P > 0.15)\"; teks menyatakan perbezaan nisbah pucuk P ≤ 0.15. Aplikasi ini mengikut teks."),
+   L("土壤空气含量：正文写 17% 和 16%，表 1 写 17.4% 和 15.6%。","Soil air content: the text says 17% and 16%; Table 1 says 17.4% and 15.6%.","Kandungan udara tanah: teks menyatakan 17% dan 16%; Jadual 1 menyatakan 17.4% dan 15.6%."),
+   DOSE_WORK,
+   L("表 2 的氧扩散率单位印为 µg cm⁻² m⁻¹，正文为 µg cm⁻² min⁻¹；本软件用正文单位。","Table 2 prints the diffusion-rate unit as µg cm⁻² m⁻¹; the text uses µg cm⁻² min⁻¹. The app uses the text's unit.","Jadual 2 mencetak unit kadar resapan sebagai µg cm⁻² m⁻¹; teks menggunakan µg cm⁻² min⁻¹. Aplikasi ini menggunakan unit teks."),
+   L("第一个氧扩散率测量日期印为 12/27/07，但试验在 2007 年 3 月结束；作者的博士论文版本写 27/12/06，所以应是 2006 年 12 月 27 日。","The first diffusion-rate date is printed 12/27/07, but the trial ended in March 2007; the author's PhD thesis version prints 27/12/06, so it is 27 Dec 2006.","Tarikh pertama kadar resapan dicetak 12/27/07, tetapi ujian tamat pada Mac 2007; versi tesis PhD penulis mencetak 27/12/06, jadi ia 27 Dis 2006."),
+   L("叶面积的 ± 值（8.1、11.8）看起来像百分比，标 * 照原文显示。","Leaf area ± values (8.1, 11.8) look like percentages; marked * and shown as printed.","Nilai ± luas daun (8.1, 11.8) kelihatan seperti peratus; ditanda * dan dipaparkan seperti dicetak.")
+  ].map(x=>`<li>${t(x)}</li>`).join("");
+
+  return `
+  <section>
+   <h1>${t(L("双氧水能给积水黏土里的根补氧吗？","Can hydrogen peroxide give oxygen to roots in wet clay?","Bolehkah hidrogen peroksida membekalkan oksigen kepada akar dalam tanah liat basah?"))}</h1>
+   ${soilArt()}
+  </section>
+  <div class="verdict">
+   <h2>${t(L("结论：有希望，未证实","Verdict: promising, not proven","Kesimpulan: berpotensi, belum terbukti"))}</h2>
+   <p>${t(L("盆栽鳄梨的地上部分长得更大，但测得的土壤含氧量没有显著变化，也没有在果园试过。先解决排水；要试双氧水，只在少数树上，与不处理的对照树并排小规模试验。","Potted avocado trees grew bigger above ground, but measured soil oxygen did not change significantly, and the method was never tested in an orchard. Fix drainage first. If you try H₂O₂, run a small side-by-side trial against untreated control trees.","Pokok avokado dalam pasu tumbuh lebih besar di atas tanah, tetapi oksigen tanah yang diukur tidak berubah dengan ketara, dan kaedah ini belum diuji di kebun. Betulkan saliran dahulu. Jika mahu cuba H₂O₂, buat ujian kecil bersebelahan dengan pokok kawalan yang tidak dirawat."))}</p>
+  </div>
+  <details class="plan-det" id="planner" ${S.planOpen?"open":""}>
+   <summary>${t(L("双氧水小试验规划（点开）","H₂O₂ small-trial planner (tap to open)","Perancang ujian kecil H₂O₂ (ketik untuk buka)"))}</summary>
+   <div class="det-body">${plannerBody()}</div>
+  </details>
+  <section>
+   <h2>${t(L("双氧水组 对比 对照组","H₂O₂ trees compared with control trees","Pokok H₂O₂ berbanding pokok kawalan"))}</h2>
+   <div id="potsIllo">${illoPots()}</div>
+   <p class="note">${t(L("点一下下面的方块，图会换成那项结果。","Tap a tile below and the drawing changes to that result.","Ketik petak di bawah dan lukisan bertukar kepada keputusan itu."))}</p>
+   <div class="tiles">${tiles}</div>
+   <p class="note">${t(L("每片叶的光合速率没有显著差异（+11%，无差异）。","Photosynthesis per leaf was not significantly different (+11%, no difference).","Fotosintesis setiap daun tidak berbeza dengan ketara (+11%, tiada beza)."))}</p>
+  </section>
+  <details>
+   <summary>${t(L("试验怎么做的","How the experiment was done","Bagaimana eksperimen dijalankan"))}</summary>
+   <div class="det-body"><dl class="facts">${facts}</dl></div>
+  </details>
+  <section class="card">
+   <h2>${t(L("使用前要知道的限制","Limits to know before you use this","Had yang perlu diketahui sebelum menggunakannya"))}</h2>
+   <ul class="plain">${limits}</ul>
+  </section>
+  <details id="quirks" style="scroll-margin-top:calc(76px + env(safe-area-inset-top,0px))">
+   <summary>${t(L("论文中看起来有误的数字","Figures in the paper that look wrong","Angka dalam kertas yang kelihatan salah"))}</summary>
+   <div class="det-body"><ul class="plain">${quirks}</ul></div>
+  </details>
+  <details id="sources">
+   <summary>${t(L("参考资料，自己查证","Sources, so you can check for yourself","Sumber, supaya anda boleh semak sendiri"))}</summary>
+   <div class="det-body">${sourcesBody()}</div>
+  </details>
+  <p class="note num" style="text-align:center">${APP_VER}</p>`;
+}
+
+function metricCard(m){
+  const mx=Math.max(Math.abs(m.c),Math.abs(m.t))||1;
+  const w=v=>Math.max(4,Math.abs(v)/mx*100);
+  const se=s=>s?` ± ${s}`:"";
+  const d = m.c<0 ? `Δ ${sign(m.t-m.c,2)}` : `${sign(pct(m.c,m.t))}%`;
+  return `<div class="metric">
+   <div class="mhead"><div class="mname">${t(m.n)} ${m.u?`<span class="unit">(${m.u})</span>`:""}</div>${badge(m.p)}</div>
+   <div class="row"><span class="who">${t(T.ctl)}</span><div class="track"><div class="fill c" style="width:${w(m.c)}%"></div><span class="val">${fmt(m.c,m.d)}${se(m.cs)}</span></div></div>
+   <div class="row"><span class="who">${t(T.trt)}</span><div class="track"><div class="fill t" style="width:${w(m.t)}%"></div><span class="val">${fmt(m.t,m.d)}${se(m.ts)}</span></div></div>
+   <div><span class="delta">${d}</span></div>
+  </div>`;
+}
+
+function viewRes(){
+  const g=GROUPS.find(x=>x.id===S.grp)||GROUPS[0];
+  const chips=GROUPS.map(x=>`<button class="chip" data-grp="${x.id}" aria-pressed="${x.id===g.id}">${t(x.name)}</button>`).join("");
+  const kpa=g.id==="leaf"?`<p class="note">† ${t(L("单位照原文印为 kPa；这个大小通常是 MPa。数值越负，树越缺水。","Unit printed as kPa in the paper; values this size are normally MPa. More negative means a thirstier tree.","Unit dicetak kPa dalam kertas; nilai sebesar ini biasanya MPa. Lebih negatif bermakna pokok lebih dahaga."))}</p>`:"";
+  const star=g.id==="growth"?`<p class="note">* ${t(L("叶面积的 ± 值照原文显示，看起来像百分比。","Leaf area ± values shown as printed; they look like percentages.","Nilai ± luas daun dipaparkan seperti dicetak; ia kelihatan seperti peratus."))}</p>`:"";
+  return `
+  <section>
+   <h1>${t(L("试验结果","Results","Keputusan"))}</h1>
+   <div class="chips" role="group">${chips}</div>
+   <div class="legend"><span class="key"><span class="sw c"></span>${t(T.ctl)}</span><span class="key"><span class="sw t"></span>${t(T.trt)}</span></div>
+   <p class="takeaway">${t(g.take)}</p>
+  </section>
+  <section>${g.m.map(metricCard).join("")}${star}${kpa}<p class="note">${t(T.sePrinted)} ${t(L("每组 5 棵树；维管结构每组取 3 棵。","5 trees per group; anatomy used 3 trees per group.","5 pokok setiap kumpulan; anatomi menggunakan 3 pokok setiap kumpulan."))}</p></section>`;
+}
+
+function poise(){
+  const r=S.r/100, per=(Math.pow(1+r,4)-1)*100;
+  const vessels=63.6/59.8;
+  const tot=(Math.pow(1+r,4)*vessels-1)*100;
+  return {per,tot,vesselsPct:(vessels-1)*100};
+}
+
+function viewWhy(){
+  const chain=[
+   L("黏土被水灌满，土里的空气孔隙变小。","Clay fills with water and the air pores shrink.","Tanah liat dipenuhi air dan liang udara mengecil."),
+   L("根缺氧，产生的能量（ATP）很少。","Roots run short of oxygen and make little energy (ATP).","Akar kekurangan oksigen dan menghasilkan sedikit tenaga (ATP)."),
+   L("根把逆境信号（脱落酸 ABA、乙烯前体 ACC）送到叶片。","Roots send stress signals (ABA and the ethylene precursor ACC) up to the leaves.","Akar menghantar isyarat tekanan (ABA dan prekursor etilena ACC) ke daun."),
+   L("气孔关闭，生长变慢，落叶，根坏死。","Stomata close, growth slows, leaves drop, roots die back.","Stomata tertutup, pertumbuhan perlahan, daun gugur, akar mati."),
+   L("缺氧的根遇上疫霉根腐，损伤比两者单独发生时大得多。","Oxygen-starved roots plus Phytophthora root rot cause far more damage than either alone.","Akar yang kekurangan oksigen ditambah reput akar Phytophthora menyebabkan kerosakan jauh lebih teruk daripada salah satunya sahaja.")
+  ].map(x=>`<li>${t(x)}</li>`).join("");
+  const p=poise();
+  const leafGain=pct(66524,95185);
+  return `
+  <section>
+   <h1>${t(L("为什么可能有效","Why it might work","Mengapa ia mungkin berkesan"))}</h1>
+   <h2>${t(L("积水对根做了什么","What waterlogging does to roots","Apa yang air bertakung lakukan kepada akar"))}</h2>
+   ${illoWet()}
+   <ol class="steps">${chain}</ol>
+  </section>
+  <section class="card">
+   <h2>${t(L("双氧水怎样释放氧气","How H₂O₂ releases oxygen","Bagaimana H₂O₂ membebaskan oksigen"))}</h2>
+   ${illoReact()}
+   <div class="eq">2 H₂O₂ → 2 H₂O + O₂</div>
+   <p>${t(L("双氧水在土里被过氧化氢酶（所有好氧生物都有）或土中的铁分解。每 1 摩尔双氧水放出 ½ 摩尔氧气。","In soil, H₂O₂ is broken down by catalase (an enzyme in all oxygen-using life) or by iron. Each mole of H₂O₂ gives half a mole of oxygen.","Dalam tanah, H₂O₂ diuraikan oleh katalase (enzim dalam semua hidupan yang menggunakan oksigen) atau oleh besi. Setiap mol H₂O₂ memberi separuh mol oksigen."))}</p>
+   <p class="note">${t(L("按论文用量换算：每棵约 700 mL 的 50% 双氧水 ≈ 419 g 纯双氧水 ≈ 整季释放约 197 g 氧气。","From the paper's dose: about 700 mL of 50% H₂O₂ per tree ≈ 419 g pure H₂O₂ ≈ about 197 g of oxygen over the season.","Daripada dos kertas: kira-kira 700 mL H₂O₂ 50% setiap pokok ≈ 419 g H₂O₂ tulen ≈ kira-kira 197 g oksigen sepanjang musim."))}</p>
+  </section>
+  <section class="card">
+   <h2>${t(L("叶子更多，而不是叶子更努力","More leaves, not harder-working leaves","Lebih banyak daun, bukan daun yang lebih kuat bekerja"))}</h2>
+   <p>${t(L("每平方厘米叶片的光合速率两组差不多。但双氧水组总叶面积多了","Photosynthesis per square centimetre of leaf was about the same in both groups. But the H₂O₂ trees had","Fotosintesis setiap sentimeter persegi daun lebih kurang sama dalam kedua-dua kumpulan. Tetapi pokok H₂O₂ mempunyai"))} <b class="num">${sign(leafGain)}%</b> ${t(L("。作者据此推论：叶子多，整棵树固定的碳也较多，可以解释树长得更大。","more total leaf area. The authors infer that the whole tree therefore fixed more carbon, which would explain the bigger canopy.","lebih jumlah luas daun. Penulis membuat inferens bahawa seluruh pokok mengikat lebih banyak karbon, yang boleh menjelaskan kanopi yang lebih besar."))}</p>
+   <p class="takeaway">${t(L("这是推论：全株的光合作用没有直接测量。","This is an inference: whole-tree photosynthesis was not measured.","Ini inferens: fotosintesis seluruh pokok tidak diukur."))}</p>
+  </section>
+  <section class="card">
+   <h2>${t(L("导管粗一点，水流多很多","A slightly wider vessel carries much more water","Salur yang sedikit lebih lebar membawa lebih banyak air"))}</h2>
+   <p>${t(L("泊肃叶定律：导管里的水流量与半径的四次方成正比。拖动看看。","Poiseuille's law: water flow in a vessel rises with the fourth power of its radius. Drag to see.","Hukum Poiseuille: aliran air dalam salur meningkat dengan kuasa empat jejarinya. Seret untuk melihat."))}</p>
+   <div class="field">
+    <label for="rr">${t(L("导管半径增加","Vessel radius increase","Peningkatan jejari salur"))}: <span class="num" id="rrv">+${fmt(S.r,2)}%</span></label>
+    <input class="range" id="rr" type="range" min="0" max="20" step="0.01" value="${S.r}">
+    <div class="seg">
+     <button class="chip" data-r="0.54" aria-pressed="${S.r===0.54}">${t(L("论文数值","Paper's value","Nilai kertas"))} +0.54%</button>
+     <button class="chip" data-r="5" aria-pressed="${S.r===5}">+5%</button>
+     <button class="chip" data-r="10" aria-pressed="${S.r===10}">+10%</button>
+    </div>
+   </div>
+   <div class="out">
+    <div class="tile"><span class="big" id="pPer">${sign(p.per,1)}%</span><span class="lbl">${t(L("每条导管的水流","Flow per vessel","Aliran setiap salur"))}</span></div>
+    <div class="tile"><span class="big" id="pTot">${sign(p.tot,1)}%</span><span class="lbl">${t(L("加上导管多 6.4% 后每条根的水流","Flow per root, with 6.4% more vessels","Aliran setiap akar, dengan 6.4% lebih salur"))}</span></div>
+   </div>
+   <p class="note">${t(L("论文中平均导管面积只多 1.1%（半径约 +0.54%），导管数多 6.4%，两者都不显著，所以这只是推算，不是测量结果。","In the paper, mean vessel area was only 1.1% larger (radius about +0.54%) and there were 6.4% more vessels. Neither was significant, so this is an estimate, not a measurement.","Dalam kertas, purata luas salur hanya 1.1% lebih besar (jejari kira-kira +0.54%) dan terdapat 6.4% lebih salur. Kedua-duanya tidak ketara, jadi ini anggaran, bukan ukuran."))}</p>
+  </section>`;
+}
+
+const DENS={30:1.11,35:1.13,50:1.196}; // g/mL at ~20 °C
+const PAPER_G = 700*DENS[50]*0.5;      // paper: ~700 mL of 50% per tree over the ~4-month season
+const PAPER_WEEKS = 4*4.345;           // Nov 2006 – Mar 2007
+function calc(){
+  if(!DENS[S.stock]) S.stock=50;
+  const pc=S.stock, rho=DENS[pc];
+  const weeks=Math.max(0.1,S.months*4.345);
+  const trees=Math.max(0,Math.round(S.trees));
+  const pureG=PAPER_G*weeks/PAPER_WEEKS;          // same weekly rate as the paper, scaled to the trial length
+  const prodML=pureG/(pc/100*rho);
+  const apps=Math.max(1,S.apps), water=Math.max(0.5,S.water);
+  const perApp=prodML/weeks/apps;                  // mL of product per application
+  const mgL=perApp*(pc/100)*rho*1000/water;        // strength of the diluted solution
+  return {prodML, perWeek:prodML/weeks, perApp, mgL, apps, water, totL:prodML*trees/1000, pureG, o2:pureG/34.0147*0.5*31.998, trees};
+}
+
+function plannerBody(){
+  const c=calc();
+  const stockBtns=[30,35,50].map(v=>`<button class="chip" data-stock="${v}" aria-pressed="${S.stock===v}">${v}%</button>`).join("");
+  return `
+   <div class="settings">
+    <h3>${t(L("设定","Settings","Tetapan"))}</h3>
+    <div class="field">
+     <span class="flabel">${t(L("你买到的双氧水浓度","Strength of the H₂O₂ you bought","Kekuatan H₂O₂ yang anda beli"))}</span>
+     <div class="seg" role="group">${stockBtns}</div>
+    </div>
+    <div class="field">
+     <label for="trees">${t(L("要处理的树（棵）","Trees to treat","Pokok untuk dirawat"))}</label>
+     <input id="trees" type="number" inputmode="numeric" min="1" max="500" step="1" value="${S.trees}">
+    </div>
+    <div class="field">
+     <label for="months">${t(L("试验月数","Trial length (months)","Tempoh ujian (bulan)"))}</label>
+     <input id="months" type="number" inputmode="decimal" min="1" max="12" step="0.5" value="${S.months}">
+    </div>
+    <div class="field">
+     <span class="flabel">${t(L("每周施用次数","Applications per week","Kali guna seminggu"))}</span>
+     <div class="seg" role="group">${[1,2,3,7].map(v=>`<button class="chip" data-apps="${v}" aria-pressed="${S.apps===v}">${v}</button>`).join("")}</div>
+    </div>
+    <div class="field">
+     <label for="water">${t(L("每棵每次稀释用水（升）","Water per tree per application (L)","Air setiap pokok setiap kali (L)"))}</label>
+     <input id="water" type="number" inputmode="decimal" min="0.5" max="200" step="0.5" value="${S.water}">
+    </div>
+    <div class="seg"><button class="btn2" id="planReset">${t(L("恢复默认值","Reset to defaults","Set semula lalai"))}</button></div>
+   </div>
+   <div class="results" id="calcOut">${calcOut(c)}</div>
+   <div id="applyIllo">${illoApply(c)}</div>
+   <div class="warn">
+    <h3>${t(L("用量未确认","Dose not confirmed","Dos belum disahkan"))}</h3>
+    <p>${t(L("这些数字来自论文写的「每棵约 700 mL」。但论文另写的浓度（1 ppm）与它相差数百倍，论文没有说明哪个正确。在作者确认之前，把这里的数字当作上限参考，从更低的用量开始试。","These figures come from the paper's \"about 700 mL per tree\". The paper's other figure, a 1 ppm strength, differs from it by hundreds of times, and the paper does not say which is right. Until the authors confirm, treat these numbers as an upper reference and start your trial lower.","Angka ini datang daripada \"kira-kira 700 mL setiap pokok\" dalam kertas. Angka lain kertas, kekuatan 1 ppm, berbeza ratusan kali ganda, dan kertas tidak menyatakan yang mana betul. Sehingga penulis mengesahkan, anggap angka ini sebagai rujukan had atas dan mulakan ujian anda lebih rendah."))}</p>
+    <p>${t(L("参考：农友群里常传的「1000 升水加 2 升 30% 双氧水」约等于 600 mg/L（0.06%），和论文 700 mL 推算出的平均浓度是同一个数量级，但那只是群里转述的数字，不是试验结果。","For comparison: the figure often passed around in farmer groups, 2 L of 30% H₂O₂ in 1,000 L of water, is about 600 mg/L (0.06%). That is the same order as the average worked out from the paper's 700 mL, but it is a figure passed around in chats, not a trial result.","Untuk perbandingan: angka yang sering tersebar dalam kumpulan petani, 2 L H₂O₂ 30% dalam 1,000 L air, ialah kira-kira 600 mg/L (0.06%). Itu sama peringkat dengan purata yang dikira daripada 700 mL kertas, tetapi ia angka yang tersebar dalam sembang, bukan keputusan ujian."))}</p>
+    <details><summary>${t(L("看计算","See the working","Lihat pengiraan"))}</summary><div class="det-body"><p>${t(DOSE_WORK)}</p></div></details>
+   </div>
+   <p class="note">${t(L("这是盆栽鳄梨收到的量，只作参考起点，不是榴莲用量。成年榴莲的根区比 200 升的盆大得多，没有人测试过榴莲需要多少。","This is the amount the potted avocados received: a reference starting point, not a durian dose. A mature durian's root zone is far bigger than a 200 L pot, and nobody has tested how much durian needs.","Ini jumlah yang diterima avokado dalam pasu: titik rujukan, bukan dos durian. Zon akar durian dewasa jauh lebih besar daripada pasu 200 L, dan belum ada yang menguji berapa banyak durian perlukan."))}</p>
+   <p class="note">${t(L("论文的施用方法：稀释后经埋地滴头，在每次灌溉（每天 2–4 次）的最后阶段注入。直接把浓双氧水倒在树头不是论文测试的方法。","How the paper applied it: diluted, through buried drippers, at the end of every irrigation (2–4 times a day). Pouring concentrated peroxide at the trunk is not what was tested.","Cara kertas menggunakannya: dicairkan, melalui penitis tertanam, pada akhir setiap pengairan (2–4 kali sehari). Menuang peroksida pekat di pangkal pokok bukan kaedah yang diuji."))}</p>
+  `;
+}
+
+function viewFarm(){
+  const first=[
+   L("排走积水：开排水沟，下雨后清理堵塞的出口。","Drain standing water: open drains and clear blocked outlets after rain.","Salirkan air bertakung: buka parit dan bersihkan saluran tersumbat selepas hujan."),
+   L("重黏土种在土墩或高畦上——智利果农就是这样做的（坡地要防冲刷）。","On heavy clay, plant on mounds or raised beds. This is what Chilean growers do (guard against erosion on slopes).","Di tanah liat berat, tanam di atas batas atau permatang tinggi. Inilah yang dilakukan penanam di Chile (elakkan hakisan di cerun)."),
+   L("土还湿时不要再浇水；浇水前先用手检查土壤。","Do not irrigate clay that is still wet. Check the soil by hand before watering.","Jangan siram tanah liat yang masih basah. Periksa tanah dengan tangan sebelum menyiram."),
+   L("雨季提早防疫霉——缺氧的根最容易被疫霉攻破。","Guard against Phytophthora early in wet spells. Oxygen-starved roots are the easiest for it to break into.","Kawal Phytophthora awal pada musim basah. Akar yang kekurangan oksigen paling mudah diserang.")
+  ].map(x=>`<li>${t(x)}</li>`).join("");
+  const c=calc();
+  const checks=[
+   L("选同龄、在同一块湿地上的树","Pick trees of the same age in the same wet patch","Pilih pokok sama umur di kawasan basah yang sama"),
+   L("分成两组同样数量；给不处理的对照树挂牌","Split them into two equal groups and tag the untreated control trees","Bahagikan kepada dua kumpulan sama banyak dan tanda pokok kawalan yang tidak dirawat"),
+   L("开始前：每棵拍照、数新梢、在固定高度量树干围","Before starting: photograph each tree, count new flushes, measure trunk girth at a marked height","Sebelum mula: ambil gambar setiap pokok, kira pucuk baru, ukur lilitan batang pada ketinggian bertanda"),
+   L("只用稀释液经滴灌施用；记录日期与用量","Apply only as a dilute solution through drip; record date and amount","Gunakan hanya sebagai larutan cair melalui titisan; catat tarikh dan jumlah"),
+   L("记录大雨和积水的日子","Record heavy-rain and waterlogged days","Catat hari hujan lebat dan air bertakung"),
+   L("一季后，用同样的测量比较处理组和对照组","After one season, compare treated and control trees with the same measurements","Selepas satu musim, bandingkan pokok dirawat dan kawalan dengan ukuran yang sama")
+  ].map((x,i)=>`<label><input type="checkbox" id="ck${i}" data-ck="${i}" ${S.checks[i]?"checked":""}><span>${t(x)}</span></label>`).join("");
+
+  return `
+  <section>
+   <h1>${t(L("在果园里怎么做","What to do in the orchard","Apa yang perlu dibuat di kebun"))}</h1>
+   <h2>${t(L("先做这几件事","Do these first","Buat ini dahulu"))}</h2>
+   <ol class="steps">${first}</ol>
+  </section>
+
+  <section>
+   <h2>${t(L("试验步骤","Trial checklist","Senarai semak ujian"))}</h2>
+   <div class="check">${checks}</div>
+  </section>
+
+  <section id="log">
+   <h2>${t(L("施用记录","Application log","Log penggunaan"))}</h2>
+   <div class="settings">
+    <div class="two">
+     <div class="field"><label for="lgDate">${t(L("日期","Date","Tarikh"))}</label><input id="lgDate" type="date" value="${today()}"></div>
+     <div class="field"><label for="lgTree">${t(L("树号","Tree tag","Tag pokok"))}</label><input id="lgTree" type="text" maxlength="20" placeholder="A1"></div>
+    </div>
+    <div class="two">
+     <div class="field"><label for="lgMl">${t(L("用量（mL 双氧水）","Amount (mL of H₂O₂)","Jumlah (mL H₂O₂)"))}</label><input id="lgMl" type="number" inputmode="decimal" min="0" step="0.5" value="${fmt(c.perApp,1).replace(/,/g,"")}" style="width:100%"></div>
+     <div class="field"><label for="lgNote">${t(L("备注","Note","Nota"))}</label><input id="lgNote" type="text" maxlength="60" placeholder="${t(L("例：昨夜大雨","e.g. heavy rain last night","cth. hujan lebat malam tadi"))}"></div>
+    </div>
+    <div class="check"><label><input type="checkbox" id="lgRain"><span>${t(L("今天有积水 / 大雨","Waterlogged or heavy rain today","Bertakung atau hujan lebat hari ini"))}</span></label></div>
+    <div class="seg"><button class="btn" id="lgAdd">${t(L("记录这次施用","Add entry","Tambah catatan"))}</button><button class="btn2" id="lgCopy" ${S.log.length?"":"disabled"}>${t(L("复制全部记录","Copy all entries","Salin semua catatan"))}</button><span class="toast" id="lgToast"></span></div>
+   </div>
+   ${S.log.length?`<div style="display:flex;flex-direction:column;gap:8px">${S.log.map((e,i)=>`<div class="logrow"><div><div class="meta">${e.d} · ${e.tree||"—"} · ${fmt(e.ml,1)} mL${e.pc?` (${e.pc}%)`:""}${e.rain?" · ☔":""}</div>${e.note?`<div>${esc(e.note)}</div>`:""}</div><button class="del" data-del="${i}" aria-label="${t(L("删除","Delete","Padam"))}">✕</button></div>`).join("")}</div>`
+   :`<p class="note">${t(L("还没有记录。每次施用后在这里记一笔；记录只保存在这部手机上。","No entries yet. Add one after each application; entries are kept only on this phone.","Belum ada catatan. Tambah selepas setiap kali guna; catatan disimpan hanya pada telefon ini."))}</p>`}
+  </section>
+
+  <details class="aid-det"><summary>${t(L("沾到了？急救","Got it on you? First aid","Terkena? Pertolongan cemas"))}</summary><div class="det-body">${aidBody()}</div></details>`;
+}
+
+function aidBody(){
+  return `
+   <div class="card" style="border:2px solid var(--weak)">
+    <h2>${t(L("求助电话","Who to call","Nombor bantuan"))}</h2>
+    <p style="font-size:1.6rem"><b class="num">999</b> — ${t(L("紧急救护（24 小时）","Emergency ambulance (24 hours)","Ambulans kecemasan (24 jam)"))}</p>
+    <p style="font-size:1.3rem"><b class="num">+604 6536 999</b></p><p>${t(L("国家毒物中心 Pusat Racun Negara（USM）中毒咨询：周一至五 8am–10pm，周末及公假 8am–5pm","National Poison Centre, Pusat Racun Negara (USM), poisoning advice: Mon–Fri 8am–10pm, weekends and public holidays 8am–5pm","Pusat Racun Negara (USM), nasihat keracunan: Isnin–Jumaat 8am–10pm, hujung minggu dan cuti umum 8am–5pm"))}</p>
+    <p class="note">${t(L("带上双氧水的瓶子或拍下标签，让医生知道浓度。","Bring the bottle or a photo of its label so the doctor knows the strength.","Bawa botol atau gambar labelnya supaya doktor tahu kekuatannya."))}</p>
+   </div>
+   <h3>${t(L("沾到了怎么办","If it gets on you","Jika terkena"))}</h3>
+   <ol class="steps">
+    <li><span><b>${t(L("皮肤","Skin","Kulit"))}</b> — ${t(L("马上用大量清水冲 15 分钟，脱掉沾到的衣物。皮肤会发白、刺痛，通常一两个小时会退。起水泡或一直痛，去诊所。","Rinse at once with plenty of water for 15 minutes and take off any splashed clothing. The skin turns white and stings; this usually fades within an hour or two. If it blisters or keeps hurting, go to a clinic.","Bilas segera dengan banyak air selama 15 minit dan tanggalkan pakaian yang terkena. Kulit menjadi putih dan pedih; biasanya hilang dalam satu dua jam. Jika melepuh atau terus sakit, pergi ke klinik."))}</span></li>
+    <li><span><b>${t(L("眼睛","Eyes","Mata"))}</b> — ${t(L("立刻用清水冲洗至少 15 分钟，撑开眼皮，有隐形眼镜要取出。冲完马上去医院，不要等。","Flush with clean water for at least 15 minutes, holding the eyelids open; take out contact lenses. Then go to a hospital straight away. Do not wait to see if it gets better.","Bilas dengan air bersih sekurang-kurangnya 15 minit sambil membuka kelopak mata; tanggalkan kanta lekap. Kemudian terus ke hospital. Jangan tunggu."))}</span></li>
+    <li><span><b>${t(L("吸入","Breathed in","Terhidu"))}</b> — ${t(L("离开现场到空气流通处。咳嗽、胸闷、呼吸困难不退，去医院。不要在密闭房间里开浓双氧水。","Move to fresh air. If coughing, chest tightness or breathing trouble does not pass, go to a hospital. Never open concentrated H₂O₂ in a closed room.","Pergi ke udara segar. Jika batuk, sesak dada atau sukar bernafas tidak hilang, pergi ke hospital. Jangan buka H₂O₂ pekat di dalam bilik tertutup."))}</span></li>
+    <li><span><b>${t(L("误吞","Swallowed","Tertelan"))}</b> — ${t(L("不要催吐。漱口，喝一杯水，马上去医院或打 999。浓双氧水在胃里会放出大量氧气，很危险。","Do not make the person vomit. Rinse the mouth, drink one glass of water, and go to a hospital or call 999 at once. Concentrated H₂O₂ releases a lot of gas in the stomach and is dangerous.","Jangan paksa muntah. Kumur mulut, minum segelas air, dan terus ke hospital atau hubungi 999. H₂O₂ pekat membebaskan banyak gas dalam perut dan berbahaya."))}</span></li>
+   </ol>
+  `;
+}
+
+function viewAid(){
+  return `
+  <section>
+   <h1>${t(L("急救与安全","First aid & safety","Pertolongan cemas & keselamatan"))}</h1>
+   ${aidBody()}
+  </section>
+  <section class="warn">
+   <h2>${t(L("安全","Safety","Keselamatan"))}</h2>
+   <ul class="plain">
+    <li>${t(L("30–50% 双氧水是强氧化剂，会灼伤皮肤和眼睛。戴护目镜和耐化学手套。","30–50% hydrogen peroxide is a strong oxidiser that burns skin and eyes. Wear goggles and chemical-resistant gloves.","Hidrogen peroksida 30–50% ialah pengoksida kuat yang membakar kulit dan mata. Pakai cermin mata pelindung dan sarung tangan tahan kimia."))}</li>
+    <li>${t(L("先放水，再把双氧水慢慢倒进大量的水里。","Put the water in first, then pour the peroxide slowly into plenty of water.","Masukkan air dahulu, kemudian tuang peroksida perlahan-lahan ke dalam banyak air."))}</li>
+    <li>${t(L("不要和肥料、农药或其他化学品同桶混合；金属和有机物会令它快速分解。","Do not mix it in the same tank with fertiliser, pesticides or other chemicals. Metals and organic matter make it break down fast.","Jangan campur dalam tangki yang sama dengan baja, racun perosak atau bahan kimia lain. Logam dan bahan organik menyebabkannya terurai dengan cepat."))}</li>
+    <li>${t(L("用原装塑料桶，放阴凉避光处，远离儿童；不要用金属容器，不要倒进饮料瓶。","Keep it in its original plastic container, cool, dark and away from children. Never use metal containers, and never pour it into a drink bottle.","Simpan dalam bekas plastik asal, di tempat sejuk, gelap dan jauh daripada kanak-kanak. Jangan guna bekas logam, dan jangan tuang ke dalam botol minuman."))}</li>
+    <li>${t(L("远离易燃物：纸、布、木屑、燃油。浓双氧水沾到这些东西可能起火。洒出来用大量清水冲淡，不要用布或纸巾擦。","Keep it away from anything that burns: paper, cloth, sawdust, fuel. Concentrated H₂O₂ on these can start a fire. Flood a spill with plenty of water; do not wipe it with cloth or paper.","Jauhkan daripada benda yang mudah terbakar: kertas, kain, habuk kayu, minyak. H₂O₂ pekat pada benda ini boleh menyebabkan kebakaran. Siram tumpahan dengan banyak air; jangan lap dengan kain atau kertas."))}</li>
+   </ul>
+  </section>
+  `;
+}
+
+function today(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function calcOut(c){
+  const tl=(v,lab,cls="")=>`<div class="tile ${cls}"><span class="big">${v}</span><span class="lbl">${t(lab)}</span></div>`;
+  const strength = c.mgL>=10000 ? `${fmt(c.mgL/10000,2)}%` : `${fmt(c.mgL)} mg/L`;
+  return `<div class="tile" style="grid-column:1/-1;border:2px solid var(--oxy)"><span class="big" style="color:var(--oxy)">${fmt(c.perApp,1)} mL</span><span class="lbl">${t(L(`每棵每次：${S.stock}% 浓度的双氧水，先放 ${fmt(c.water,1)} 升水，再加入双氧水，淋在滴水线附近的根区`,`Per tree per application: ${S.stock}% hydrogen peroxide, add to ${fmt(c.water,1)} L of water (water first), then pour over the root zone near the drip line`,`Setiap pokok setiap kali: hidrogen peroksida ${S.stock}%, masukkan ke ${fmt(c.water,1)} L air (air dahulu), kemudian siram zon akar berhampiran garis titisan`))}</span><span class="note">${t(L("稀释后浓度","Diluted strength","Kekuatan selepas dicairkan"))}: <b class="num">${strength}</b>${c.mgL>=5000?` · ${t(L("偏浓，请加大用水量","strong; use more water","pekat; tambah air"))}`:""}</span></div>`
+   + tl(`${fmt(c.prodML)} mL`,L(`每棵整季（${S.stock}% 浓度双氧水）`,`Per tree, whole trial (${S.stock}% H₂O₂)`,`Setiap pokok, sepanjang ujian (H₂O₂ ${S.stock}%)`))
+   + tl(`${fmt(c.perWeek,1)} mL`,L("每棵每周","Per tree, per week","Setiap pokok, setiap minggu"))
+   + tl(`${fmt(c.totL,2)} L`,L(`${c.trees} 棵树总量`,`Total for ${c.trees} trees`,`Jumlah untuk ${c.trees} pokok`))
+   + tl(`${c.trees}`,L("留作对照、不处理的树","Control trees to leave untreated","Pokok kawalan yang tidak dirawat"))
+   + tl(`${fmt(c.pureG)} g`,L("每棵纯双氧水","Pure H₂O₂ per tree","H₂O₂ tulen setiap pokok"))
+   + tl(`≈${fmt(c.o2)} g`,L("每棵释放的氧气","Oxygen released per tree","Oksigen dibebaskan setiap pokok"));
+}
+
+/* ---------- render & events ---------- */
+const VIEWS={sum:viewSum,res:viewRes,why:viewWhy,farm:viewFarm,aid:viewAid};
+const LANGLBL={zh:"中文",en:"EN",ms:"BM"};
+function render(){
+  document.documentElement.lang = S.lang==="zh"?"zh-Hans":S.lang==="ms"?"ms":"en";
+  document.documentElement.style.setProperty("--fs",S.fs+"px");
+  document.getElementById("appTitle").textContent=t(T.title);
+  document.getElementById("langBtn").textContent=LANGLBL[S.lang];
+  document.getElementById("tabs").innerHTML=T.tabs.map(x=>`<button class="tab" data-tab="${x.id}" ${x.id===S.tab?'aria-current="page"':""}><svg viewBox="0 0 24 24" aria-hidden="true">${x.i}</svg>${t(x.n)}</button>`).join("");
+  document.getElementById("main").innerHTML=(VIEWS[S.tab]||viewSum)();
+}
+function go(tab,anchor){S.tab=tab;store.set("tab",tab);render();
+  const el=anchor&&document.getElementById(anchor);
+  if(el){ if(el.tagName==="DETAILS") el.open=true; el.scrollIntoView({block:"start"}); } else window.scrollTo(0,0)}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.tab) go(b.dataset.tab);
+  else if(b.dataset.go) go(b.dataset.go,b.dataset.anchor);
+  else if(b.dataset.grp){S.grp=b.dataset.grp;store.set("grp",S.grp);render()}
+  else if(b.dataset.stock){S.stock=+b.dataset.stock;store.set("stock",S.stock);render()}
+  else if(b.dataset.tile!==undefined){S.tile=+b.dataset.tile;document.getElementById("potsIllo").innerHTML=illoPots();document.querySelectorAll("[data-tile]").forEach(x=>x.setAttribute("aria-pressed",String(+x.dataset.tile===S.tile)))}
+  else if(b.id==="planReset"){Object.assign(S,{stock:50,trees:5,months:4,apps:2,water:10});["stock","trees","months","apps","water"].forEach(k=>store.set(k,S[k]));render()}
+  else if(b.dataset.apps){S.apps=+b.dataset.apps;store.set("apps",S.apps);render()}
+  else if(b.dataset.del!==undefined){S.log.splice(+b.dataset.del,1);store.set("log",S.log);render()}
+  else if(b.id==="lgAdd"){
+    const ml=parseFloat(document.getElementById("lgMl").value);
+    const e={d:document.getElementById("lgDate").value||today(),pc:S.stock,tree:document.getElementById("lgTree").value.trim().slice(0,20),ml:isFinite(ml)?ml:0,rain:document.getElementById("lgRain").checked,note:document.getElementById("lgNote").value.trim().slice(0,60)};
+    S.log.unshift(e);store.set("log",S.log);render();}
+  else if(b.id==="lgCopy"){
+    const txt=["date\ttree\tmL\tH2O2 %\train\tnote",...S.log.map(e=>[e.d,e.tree,e.ml,e.pc||"",e.rain?"yes":"no",e.note].join("\t"))].join("\n");
+    const toast=document.getElementById("lgToast");
+    const done=()=>{toast.textContent=t(L("已复制","Copied","Disalin"));setTimeout(()=>toast.textContent="",2000)};
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done)); else fallbackCopy(txt,done);}
+  else if(b.id==="themeBtn"){const o=["auto","light","dark"];S.theme=o[(o.indexOf(S.theme)+1)%3];store.set("theme",S.theme);applyTheme()}
+  else if(b.dataset.r){S.r=+b.dataset.r;render()}
+  else if(b.dataset.pick){S.lang=b.dataset.pick;store.set("lang",S.lang);document.getElementById("picker").hidden=true;render()}
+  else if(b.id==="homeBtn") go("sum");
+  else if(b.id==="topBtn") window.scrollTo({top:0,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
+  else if(b.id==="langBtn"){const o=["zh","en","ms"];S.lang=o[(o.indexOf(S.lang)+1)%3];store.set("lang",S.lang);render()}
+  else if(b.id==="fsBtn"){const o=[17,19,21];S.fs=o[(o.indexOf(S.fs)+1)%3]||17;store.set("fs",S.fs);render()}
+});
+document.addEventListener("input",e=>{
+  const el=e.target;
+  if(el.id==="rr"){S.r=+el.value;const p=poise();
+    document.getElementById("rrv").textContent="+"+fmt(S.r,2)+"%";
+    document.getElementById("pPer").textContent=sign(p.per,1)+"%";
+    document.getElementById("pTot").textContent=sign(p.tot,1)+"%";
+    document.querySelectorAll("[data-r]").forEach(x=>x.setAttribute("aria-pressed",String(+x.dataset.r===S.r)));}
+  if(el.id==="trees"||el.id==="months"||el.id==="water"){
+    const v=parseFloat(el.value);if(!isFinite(v)||v<=0)return;
+    S[el.id]=v;store.set(el.id,v);
+    const cc=calc();document.getElementById("calcOut").innerHTML=calcOut(cc);document.getElementById("applyIllo").innerHTML=illoApply(cc);}
+});
+document.addEventListener("toggle",e=>{const el=e.target;if(el.id==="planner"){S.planOpen=el.open;store.set("planOpen",el.open)}},true);
+document.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.dataset.ck!==undefined){S.checks[el.dataset.ck]=el.checked;store.set("checks",S.checks)}
+});
+
+function fallbackCopy(txt,done){const ta=document.createElement("textarea");ta.value=txt;ta.style.position="fixed";ta.style.opacity="0";document.body.appendChild(ta);ta.select();try{document.execCommand("copy");done()}catch(e){}document.body.removeChild(ta)}
+function showUpdated(v){
+  document.getElementById("updTxt").textContent=t(L(`软件已更新到 ${v}`,`App updated to ${v}`,`Aplikasi dikemas kini ke ${v}`));
+  document.getElementById("upd").hidden=false;
+  clearTimeout(showUpdated.tm);showUpdated.tm=setTimeout(()=>{document.getElementById("upd").hidden=true},8000);
+}
+document.getElementById("updClose").addEventListener("click",()=>{document.getElementById("upd").hidden=true});
+/* version check: the service worker keeps index.html fresh; the page notices the version changed since last launch */
+{const last=store.get("lastVer",null);if(last&&last!==APP_VER&&S.lang) setTimeout(()=>showUpdated(APP_VER),400);store.set("lastVer",APP_VER)}
+if("serviceWorker" in navigator){navigator.serviceWorker.addEventListener("message",e=>{if(e.data&&e.data.type==="updated"&&e.data.version&&e.data.version!==APP_VER) showUpdated(e.data.version)})}
+const topBtn=document.getElementById("topBtn");
+function onScroll(){topBtn.hidden = window.scrollY < 400}
+window.addEventListener("scroll",onScroll,{passive:true});
+function setHomeLabel(){const h=t(L("返回主页","Back to home","Kembali ke utama")),u=t(L("回到顶部","Back to top","Kembali ke atas"));document.getElementById("homeBtn").setAttribute("aria-label",h);topBtn.setAttribute("aria-label",u)}
+const _render=render;render=function(){_render();setHomeLabel();applyTheme();onScroll()};
+
+if(!S.lang){S.lang="zh";document.getElementById("picker").hidden=false}
+render();
+})();
+</script>
+<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("sw.js")}</script>
+</body>
+</html>
